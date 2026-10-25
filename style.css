@@ -73,7 +73,7 @@ html, body {
 }
 .order.done { opacity: .35; }
 .order.target { background: #e7f0dd; transform: scale(1.04); }
-.order .item { width: 34px; height: 34px; font-size: 13px; }
+.order .item { position: static; width: 34px; height: 34px; font-size: 13px; flex: none; }
 .order .item.have { outline: 3px solid #7f9c6a; }
 
 /* Tablero */
@@ -184,6 +184,16 @@ html, body {
 }
 .card h1 { margin: 0 0 8px; font-size: 24px; }
 .card p { margin: 0; color: var(--muted); line-height: 1.4; }
+.local-card .scene {
+  border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
+  margin: 8px 0 12px; line-height: 0;
+}
+.local-card p { font-size: 14px; }
+.local-card .row { display: flex; justify-content: center; margin-top: 16px; }
+.local-card button {
+  font: inherit; padding: 8px 16px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer;
+}
 .settings-card { text-align: left; }
 .settings-card .muted { font-size: 13px; margin-bottom: 12px; }
 .settings-card label {

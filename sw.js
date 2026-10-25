@@ -1,5 +1,5 @@
-const CACHE = 'bistro-v1';
-const FILES = ['./', './index.html', './style.css', './app.js', './manifest.json', './icon.svg'];
+const CACHE = 'bistro-v2';
+const FILES = ['./', './index.html', './style.css', './app.js', './local.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

@@ -15,6 +15,8 @@
     <header class="top">
       <div class="stat" id="energy" title="Energía de hoy"></div>
       <div class="stat time" id="minutes" title="Minutos jugados"></div>
+      <div class="stat" id="stars" title="Estrellas"></div>
+      <button class="icon-btn" id="local-btn" aria-label="El local">🏠</button>
       <button class="icon-btn" id="settings-btn" aria-label="Ajustes">⚙</button>
     </header>
 
@@ -34,6 +36,15 @@
       </div>
     </div>
 
+    <div class="overlay" id="local" hidden>
+      <div class="card local-card">
+        <h1>El local</h1>
+        <div class="scene" id="local-scene"></div>
+        <p id="local-caption"></p>
+        <div class="row"><button type="button" id="local-close">Cerrar</button></div>
+      </div>
+    </div>
+
     <div class="overlay" id="settings" hidden>
       <div class="card settings-card">
         <h1>Ajustes</h1>
@@ -46,6 +57,7 @@
       </div>
     </div>
   </main>
+  <script src="local.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

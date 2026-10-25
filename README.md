@@ -28,4 +28,5 @@ GitHub Pages desde la rama `main`, carpeta raíz. No hay build.
 - `index.html` — estructura
 - `style.css` — estilos (paleta cálida, una tonalidad por cadena)
 - `app.js` — toda la lógica: estado, reset, horario, sesiones, tablero, pedidos, ajustes
+- `local.js` — la escena del local: 30 piezas en SVG que se desbloquean cada 15 estrellas
 - `sw.js` + `manifest.json` + `icon.svg` — PWA

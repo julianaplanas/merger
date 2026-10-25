@@ -184,7 +184,14 @@
     if (order.items.every(x => x.done)) {
       order.done = true;
       S.stars++;
-      if (S.orders.every(o => o.done)) { S.dayDone = true; endSession(); }
+      if (S.orders.every(o => o.done)) {
+        S.dayDone = true;
+        // Piezas nuevas desde el último cierre: se anuncian en la pantalla de cierre, no en el tablero.
+        const nowUnlocked = LOCAL.unlockedCount(S.stars);
+        S.newPieces = LOCAL.pieces.slice(S.unlocked, nowUnlocked).map(p => p.name);
+        S.unlocked = nowUnlocked;
+        endSession();
+      }
     }
     save();
     return true;
@@ -262,6 +269,7 @@
   function render() {
     const t = now();
     $('energy').textContent = `⚡ ${S.energy}`;
+    $('stars').textContent = `★ ${S.stars}`;
     $('minutes').textContent = `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`;
 
     // Pedidos
@@ -296,7 +304,11 @@
     // Bloqueos
     let lock = null;
     if (!isOpen(t)) lock = ['Cerrado', `Abrimos ${fmtOpening(nextOpening(t))}.`];
-    else if (S.dayDone) lock = ['Listo por hoy', `${S.stars} estrellas en total. Mañana hay pedidos nuevos a las ${S.settings.resetHour}:00.`];
+    else if (S.dayDone) {
+      const np = S.newPieces || [];
+      const extra = np.length ? ` Hay algo nuevo en el local: ${np.join(', ').toLowerCase()}.` : '';
+      lock = ['Listo por hoy', `${S.stars} estrellas en total.${extra} Los próximos pedidos llegan ${fmtOpening(nextOpening(t))}.`];
+    }
     else if (S.pausedUntil > t) {
       const m = Math.ceil((S.pausedUntil - t) / 60000);
       lock = ['Pausa', `Llevabas ${S.settings.stopMin} minutos seguidos. El tablero vuelve en ${m} min.`];
@@ -386,6 +398,15 @@
   }
   boardEl.addEventListener('pointerup', endDrag);
   boardEl.addEventListener('pointercancel', endDrag);
+
+  // ---------- El local ----------
+  $('local-btn').addEventListener('click', () => {
+    const { svg, caption } = LOCAL.render(S.stars);
+    $('local-scene').innerHTML = svg;
+    $('local-caption').textContent = caption;
+    $('local').hidden = false;
+  });
+  $('local-close').addEventListener('click', () => { $('local').hidden = true; });
 
   // ---------- Ajustes ----------
   const FIELDS = [
