@@ -72,9 +72,11 @@ html, body {
   transition: background .15s, transform .15s;
 }
 .order.done { opacity: .35; }
-.order.target { background: #e7f0dd; transform: scale(1.04); }
-.order .item { position: static; width: 34px; height: 34px; font-size: 13px; flex: none; }
-.order .item.have { outline: 3px solid #7f9c6a; }
+.order.ready { border-color: #7f9c6a; background: #f1f5ea; }
+.order.accepts { border-color: #7f9c6a; border-style: dashed; background: #e7f0dd; }
+.order.target { background: #d7e6c6; transform: scale(1.06); border-style: solid; }
+.order .item { position: static; width: 34px; height: 34px; font-size: 13px; flex: none; opacity: .55; }
+.order .item.have { opacity: 1; outline: 3px solid #7f9c6a; outline-offset: 1px; }
 
 /* Tablero */
 .board-wrap { position: relative; }

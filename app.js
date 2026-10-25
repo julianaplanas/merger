@@ -272,17 +272,23 @@
     $('stars').textContent = `★ ${S.stars}`;
     $('minutes').textContent = `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`;
 
-    // Pedidos
+    // Pedidos: un ítem pedido que ya está en el tablero se marca; si el pedido entero se puede entregar, la tarjeta también.
+    const onBoard = new Set();
+    for (const row of S.board) for (const it of row) if (it && !it.gen) onBoard.add(`${it.chain}:${it.level}`);
     ordersEl.innerHTML = '';
     S.orders.forEach((o, i) => {
       const el = document.createElement('div');
       el.className = 'order' + (o.done ? ' done' : '');
       el.dataset.order = i;
+      let ready = !o.done;
       for (const x of o.items) {
         const ie = itemEl({ chain: x.chain, level: x.level }, true);
         if (x.done) ie.style.opacity = '.3';
+        else if (onBoard.has(`${x.chain}:${x.level}`)) ie.classList.add('have');
+        else ready = false;
         el.appendChild(ie);
       }
+      if (ready) el.classList.add('ready');
       ordersEl.appendChild(el);
     });
 
@@ -340,6 +346,7 @@
 
   function clearHighlights() {
     document.querySelectorAll('.cell.over, .order.target').forEach(e => e.classList.remove('over', 'target'));
+    if (!drag) document.querySelectorAll('.order.accepts').forEach(e => e.classList.remove('accepts'));
     trashEl.classList.remove('over');
   }
 
@@ -365,6 +372,10 @@
       document.body.appendChild(drag.ghost);
       drag.src.classList.add('ghost');
       trashEl.classList.add('show');
+      S.orders.forEach((o, i) => {
+        if (!o.done && o.items.some(x => !x.done && x.chain === drag.it.chain && x.level === drag.it.level))
+          ordersEl.children[i].classList.add('accepts');
+      });
     }
     drag.ghost.style.left = e.clientX + 'px';
     drag.ghost.style.top = e.clientY + 'px';
