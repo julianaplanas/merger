@@ -256,7 +256,11 @@
     const el = document.createElement('div');
     el.className = `item ${it.gen || it.chain}`;
     if (it.gen) { el.classList.add('gen'); el.textContent = CHAINS[it.gen].icon; if (S.energy <= 0) el.classList.add('empty'); }
-    else { el.textContent = it.level; if (it.level === MAX_LEVEL) el.classList.add('max'); el.title = CHAINS[it.chain].items[it.level - 1]; }
+    else {
+      el.innerHTML = ICONS.svg(it.chain, it.level) + `<span class="lvl">${it.level}</span>`;
+      if (it.level === MAX_LEVEL) el.classList.add('max');
+      el.title = CHAINS[it.chain].items[it.level - 1];
+    }
     return el;
   }
 

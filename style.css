@@ -114,16 +114,25 @@ html, body {
   touch-action: none;
   cursor: grab;
 }
-.item.pan    { background: var(--pan); }
-.item.huerta { background: var(--huerta); }
-.item.cafe   { background: var(--cafe); }
-.item.dulce  { background: var(--dulce); }
+.item.pan    { background: #f0d8b0; box-shadow: inset 0 0 0 3px var(--pan); }
+.item.huerta { background: #cfdcc1; box-shadow: inset 0 0 0 3px var(--huerta); }
+.item.cafe   { background: #dcc2a8; box-shadow: inset 0 0 0 3px var(--cafe); }
+.item.dulce  { background: #efcdd6; box-shadow: inset 0 0 0 3px var(--dulce); }
+.item svg { width: 82%; height: 82%; display: block; }
+.item .lvl {
+  position: absolute; right: 3px; bottom: 2px;
+  font-size: 9px; font-weight: 700; color: var(--ink); opacity: .55;
+}
 .item.gen {
   border-radius: 50%;
+  box-shadow: none;
+  color: #fff;
   border: 3px dashed rgba(255,255,255,.7);
   font-size: 22px;
   cursor: pointer;
 }
+.item.gen.pan { background: var(--pan); } .item.gen.huerta { background: var(--huerta); }
+.item.gen.cafe { background: var(--cafe); } .item.gen.dulce { background: var(--dulce); }
 .item.gen.empty { filter: saturate(.3) brightness(1.1); }
 .item.dragging {
   position: fixed;
