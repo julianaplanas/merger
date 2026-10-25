@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f3ead9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Bistró</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <header class="top">
+      <div class="stat" id="energy" title="Energía de hoy"></div>
+      <div class="stat time" id="minutes" title="Minutos jugados"></div>
+      <button class="icon-btn" id="settings-btn" aria-label="Ajustes">⚙</button>
+    </header>
+
+    <section class="orders" id="orders"></section>
+
+    <section class="board-wrap">
+      <div class="board" id="board"></div>
+      <div class="trash" id="trash">🗑</div>
+    </section>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <div class="overlay" id="overlay" hidden>
+      <div class="card">
+        <h1 id="overlay-title"></h1>
+        <p id="overlay-text"></p>
+      </div>
+    </div>
+
+    <div class="overlay" id="settings" hidden>
+      <div class="card settings-card">
+        <h1>Ajustes</h1>
+        <p class="muted">Los cambios aplican desde el próximo reset (7:00).</p>
+        <form id="settings-form"></form>
+        <div class="row">
+          <button type="button" id="settings-cancel">Cerrar</button>
+          <button type="button" class="primary" id="settings-save">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
