@@ -144,7 +144,16 @@ html, body {
   box-shadow: 0 8px 20px rgba(0,0,0,.25);
 }
 .item.ghost { opacity: .25; }
-.item.wants { outline: 3px solid #fff; outline-offset: -3px; }
+.item.wants { box-shadow: inset 0 0 0 3px #5f8f4a; animation: wants 1.6s ease-in-out infinite; }
+.item.wants::before {
+  content: "✓";
+  position: absolute; top: -5px; right: -5px;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: #5f8f4a; color: #fff;
+  font-size: 11px; line-height: 17px; text-align: center; font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+@keyframes wants { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 
 /* Nivel máximo */
 .item.max::after {
@@ -195,6 +204,20 @@ html, body {
 }
 .card h1 { margin: 0 0 8px; font-size: 24px; }
 .card p { margin: 0; color: var(--muted); line-height: 1.4; }
+.chain-card .chain-row {
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  margin: 12px 0; flex-wrap: wrap;
+}
+.chain-card .chain-row .item { position: static; width: 38px; height: 38px; flex: none; opacity: .45; }
+.chain-card .chain-row .item.goal { opacity: 1; transform: scale(1.15); box-shadow: inset 0 0 0 3px #5f8f4a; }
+.chain-card .chain-row .item.goal::after { content: none; }
+.chain-card .chain-row .arrow { color: var(--muted); font-size: 12px; }
+.chain-card p { font-size: 14px; }
+.chain-card .row { display: flex; justify-content: center; margin-top: 16px; }
+.chain-card button, .local-card button {
+  font: inherit; padding: 8px 16px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer;
+}
 .local-card .scene {
   border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
   margin: 8px 0 12px; line-height: 0;

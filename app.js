@@ -258,6 +258,7 @@
     if (it.gen) { el.classList.add('gen'); el.textContent = CHAINS[it.gen].icon; if (S.energy <= 0) el.classList.add('empty'); }
     else {
       el.innerHTML = ICONS.svg(it.chain, it.level) + `<span class="lvl">${it.level}</span>`;
+      el.dataset.chain = it.chain; el.dataset.level = it.level;
       if (it.level === MAX_LEVEL) el.classList.add('max');
       el.title = CHAINS[it.chain].items[it.level - 1];
     }
@@ -362,7 +363,7 @@
     if (!it) return;
     e.preventDefault();
     drag = { r, c, it, moved: false, startX: e.clientX, startY: e.clientY, ghost: null, src: cell.firstChild };
-    boardEl.setPointerCapture(e.pointerId);
+    if (boardEl.setPointerCapture) boardEl.setPointerCapture(e.pointerId);
   });
 
   boardEl.addEventListener('pointermove', e => {
@@ -403,6 +404,11 @@
 
     if (!d.moved) {
       if (d.it.gen) generate(d.r, d.c);
+      else {
+        // Toque corto sobre un ítem pedido: se entrega al primer pedido que lo acepte.
+        const i = S.orders.findIndex(o => !o.done && o.items.some(x => !x.done && x.chain === d.it.chain && x.level === d.it.level));
+        if (i >= 0) deliver(i, d.r, d.c);
+      }
     } else {
       const hit = cellAt(e.clientX, e.clientY);
       if (hit && hit.kind === 'cell') moveOrMerge(d.r, d.c, hit.r, hit.c);
@@ -413,6 +419,35 @@
   }
   boardEl.addEventListener('pointerup', endDrag);
   boardEl.addEventListener('pointercancel', endDrag);
+
+  // ---------- Cadena de un ítem pedido ----------
+  function showChain(chain, level) {
+    const ch = CHAINS[chain];
+    $('chain-title').textContent = ch.items[level - 1];
+    const row = $('chain-row');
+    row.innerHTML = '';
+    for (let l = 1; l <= MAX_LEVEL; l++) {
+      const el = itemEl({ chain, level: l });
+      el.classList.toggle('goal', l === level);
+      row.appendChild(el);
+      if (l < MAX_LEVEL) { const a = document.createElement('span'); a.className = 'arrow'; a.textContent = '›'; row.appendChild(a); }
+    }
+    const have = [];
+    for (const r of S.board) for (const it of r) if (it && !it.gen && it.chain === chain && it.level < level) have.push(it.level);
+    const base = 2 ** (level - 1);
+    const haveWorth = have.reduce((s, l) => s + 2 ** (l - 1), 0);
+    const missing = Math.max(0, base - haveWorth);
+    $('chain-text').textContent =
+      `Nivel ${level} de ${ch.name}: equivale a ${base} ${ch.items[0].toLowerCase()}${base > 1 ? 's' : ''} del generador. ` +
+      (have.length ? `Lo que tenés en el tablero de esta cadena vale ${haveWorth}; te faltan unos ${missing} toques.` : `Te faltan unos ${base} toques.`);
+    $('chain').hidden = false;
+  }
+  ordersEl.addEventListener('click', e => {
+    const ie = e.target.closest('.item');
+    if (!ie || !ie.dataset.chain) return;
+    showChain(ie.dataset.chain, +ie.dataset.level);
+  });
+  $('chain-close').addEventListener('click', () => { $('chain').hidden = true; });
 
   // ---------- El local ----------
   $('local-btn').addEventListener('click', () => {
