@@ -703,7 +703,12 @@
   setInterval(() => { checkIdle(); maybeReset(); render(); }, 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkIdle(); maybeReset(); render(); } });
 
-  if ('serviceWorker' in navigator && !DEV) navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Service worker: cuando se activa una versión nueva, recargar una vez para no quedarse con la anterior en pantalla.
+  if ('serviceWorker' in navigator && !DEV) {
+    let hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) location.reload(); hadController = true; });
+    navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(() => {});
+  }
 
   if (DEV) window.bistro = {
     S, save, render, generate, moveOrMerge, deliver, remove, touch, maybeReset, gameDay, isOpen, nextOpening,
