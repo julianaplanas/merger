@@ -16,6 +16,7 @@
       <div class="stat" id="energy" title="Energía de hoy"></div>
       <div class="stat time" id="minutes" title="Minutos jugados"></div>
       <div class="stat" id="stars" title="Estrellas"></div>
+      <button class="icon-btn" id="book-btn" aria-label="Recetas">📖</button>
       <button class="icon-btn" id="local-btn" aria-label="El local">🏠</button>
       <button class="icon-btn" id="settings-btn" aria-label="Ajustes">⚙</button>
     </header>
@@ -39,7 +40,7 @@
     <div class="overlay" id="chain" hidden>
       <div class="card chain-card">
         <h1 id="chain-title"></h1>
-        <div class="chain-row" id="chain-row"></div>
+        <div class="chain-body" id="chain-row"></div>
         <p id="chain-text"></p>
         <div class="row"><button type="button" id="chain-close">Cerrar</button></div>
       </div>
@@ -66,6 +67,7 @@
       </div>
     </div>
   </main>
+  <script src="data.js"></script>
   <script src="icons.js"></script>
   <script src="local.js"></script>
   <script src="app.js"></script>

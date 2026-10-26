@@ -94,13 +94,13 @@ window.LOCAL = (() => {
 
   function unlockedCount(stars) { return Math.min(pieces.length, Math.floor(stars / COST)); }
 
-  function render(stars) {
-    const n = unlockedCount(stars);
+  // n = piezas desbloqueadas (lo decide la lista de desbloqueos en data.js)
+  function render(n) {
+    n = Math.min(pieces.length, n);
     const svg = `<svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" width="100%">${base}${pieces.slice(0, n).map(p => p.svg).join('')}</svg>`;
     const next = n < pieces.length ? pieces[n] : null;
-    const missing = next ? (n + 1) * COST - stars : 0;
     const caption = next
-      ? `${n} de ${pieces.length} piezas. Próxima: ${next.name}, en ${missing} ${missing === 1 ? 'estrella' : 'estrellas'}.`
+      ? `${n} de ${pieces.length} piezas. Próxima: ${next.name}.`
       : `${pieces.length} de ${pieces.length} piezas. El local está completo.`;
     return { svg, caption, n };
   }

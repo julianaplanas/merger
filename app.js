@@ -1,20 +1,12 @@
 /* Bistró — merge game de cocina, sin publicidad y con horario.
-   Un solo archivo, sin dependencias. Estado en localStorage. */
+   v2: ingredientes + estaciones + recetas. Contenido en data.js; iconos en icons.js; escena en local.js. */
 
 (() => {
   'use strict';
 
-  // ---------- Datos ----------
-  const COLS = 7, ROWS = 9, MAX_LEVEL = 7;
-
-  const CHAINS = {
-    pan:    { name: 'Panadería', icon: '🥖', items: ['Harina', 'Masa', 'Pan', 'Baguette', 'Croissant', 'Tarta', 'Pastel'] },
-    huerta: { name: 'Huerta',    icon: '🌱', items: ['Semilla', 'Brote', 'Tomate', 'Ensalada', 'Gazpacho', 'Ratatouille', 'Menú degustación'] },
-    cafe:   { name: 'Café',      icon: '☕', items: ['Grano', 'Molido', 'Espresso', 'Latte', 'Capuchino', 'Affogato', 'Carta de cafés'] },
-    dulce:  { name: 'Dulce',     icon: '🍬', items: ['Azúcar', 'Caramelo', 'Galleta', 'Brownie', 'Macaron', 'Tiramisú', 'Mesa dulce'] },
-  };
-  const CHAIN_KEYS = Object.keys(CHAINS);
-  const GENERATORS = [[8, 0, 'pan'], [8, 2, 'huerta'], [8, 4, 'cafe'], [8, 6, 'dulce']]; // [fila, col, cadena]
+  const { CHAINS, LEVELS, STATIONS, DISHES, UNLOCKS, GEN_POS, STATION_POS } = DATA;
+  // Fondo claro de la casilla según la familia del plato (el borde lleva el color pleno).
+  const DISH_BG = { '#c9643f': '#f6dcd2', '#7f9c6a': '#dfe8d6', '#c97b8e': '#f3dde3', '#e4b45a': '#f8ecd2', '#8b5e3c': '#eadbcf', '#5d6b78': '#dfe4e8', '#5a3b26': '#f6efe3' };
 
   const DEFAULT_SETTINGS = {
     openHour: 8, closeHour: 19, days: [1, 2, 3, 4, 5], resetHour: 7,
@@ -23,31 +15,37 @@
   };
 
   const DEV = ['localhost', '127.0.0.1'].includes(location.hostname);
-  const STORAGE_KEY = 'bistro.v1';
+  const STORAGE_KEY = 'bistro.v2';
+  const OLD_KEY = 'bistro.v1';
+
+  // ---------- Celdas ----------
+  // Una celda contiene null o uno de:
+  //   { id: 'pan2' }                                 ingrediente (cadena+nivel) o plato (id de DISHES)
+  //   { gen: 'pan' }                                 generador
+  //   { station: 'horno', slots: ['pan2', null, …] } estación con ingredientes puestos
+  //   { id: 'pizza', big: true }                     plato grande (dos iguales fusionados)
 
   // ---------- Estado ----------
   let S = load();
-
-  function emptyBoard() {
-    const b = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-    for (const [r, c, chain] of GENERATORS) b[r][c] = { gen: chain };
-    return b;
-  }
+  let ROWS = 9, COLS = 7;
 
   function freshState() {
     return {
-      board: emptyBoard(),
+      board: Array.from({ length: 9 }, () => Array(7).fill(null)),
+      wide: false,
       energy: DEFAULT_SETTINGS.energy,
       orders: [],
       stars: 0,
-      unlocked: 0,
+      unlockedIdx: 0,             // cuántas entradas de UNLOCKS están aplicadas
+      discovered: [],             // ids de platos hechos al menos una vez
       dayDone: false,
       lastReset: null,
-      session: null,            // { startedAt, lastTouch }
+      session: null,
       pausedUntil: 0,
-      minutes: {},              // { 'YYYY-MM-DD': minutos }
+      minutes: {},
       settings: { ...DEFAULT_SETTINGS },
       pendingSettings: null,
+      newUnlocks: [],
     };
   }
 
@@ -59,6 +57,16 @@
         s.settings = { ...DEFAULT_SETTINGS, ...(s.settings || {}) };
         return s;
       }
+      // Migración desde v1: se conservan estrellas, minutos y ajustes; el tablero se reinicia.
+      const old = localStorage.getItem(OLD_KEY);
+      if (old) {
+        const o = JSON.parse(old);
+        const s = freshState();
+        s.stars = o.stars || 0; s.minutes = o.minutes || {}; s.lastReset = o.lastReset || null;
+        s.settings = { ...DEFAULT_SETTINGS, ...(o.settings || {}) }; s.pendingSettings = o.pendingSettings || null;
+        s.energy = o.energy ?? s.energy; s.dayDone = false;
+        return s;
+      }
     } catch (e) { /* estado corrupto: se empieza de cero */ }
     return freshState();
   }
@@ -67,10 +75,56 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch (e) { /* sin espacio: seguimos */ }
   }
 
+  // ---------- Desbloqueos ----------
+  function applyUnlocks(announce) {
+    const news = [];
+    while (S.unlockedIdx < UNLOCKS.length && UNLOCKS[S.unlockedIdx].stars <= S.stars) {
+      const u = UNLOCKS[S.unlockedIdx++];
+      if (u.kind === 'gen') { place({ gen: u.id }, GEN_POS[u.id]); news.push(`generador de ${CHAINS[u.id].name.toLowerCase()}`); }
+      else if (u.kind === 'station') { place({ station: u.id, slots: Array(STATIONS[u.id].slots).fill(null) }, STATION_POS[u.id]); news.push(`${STATIONS[u.id].name.toLowerCase()}`); }
+      else if (u.kind === 'deco') { news.push(`${LOCAL.pieces[u.id].name.toLowerCase()} en el local`); }
+      else if (u.kind === 'board') { widen(); news.push('tablero más grande'); }
+    }
+    if (announce && news.length) S.newUnlocks = (S.newUnlocks || []).concat(news);
+    return news;
+  }
+
+  function place(cell, [r, c]) {
+    if (S.board[r][c] && (S.board[r][c].gen || S.board[r][c].station)) return;
+    if (S.board[r][c]) { const spot = nearestFree(r, c); if (spot) S.board[spot[0]][spot[1]] = S.board[r][c]; }
+    S.board[r][c] = cell;
+  }
+
+  function widen() {
+    if (S.wide) return;
+    S.wide = true;
+    const nb = Array.from({ length: 10 }, () => Array(8).fill(null));
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 7; c++) nb[r][c] = S.board[r][c];
+    // generadores de la fila 8 pasan a la 9
+    for (let c = 0; c < 7; c++) if (nb[8][c] && nb[8][c].gen) { nb[9][c] = nb[8][c]; nb[8][c] = null; }
+    S.board = nb;
+    syncSize();
+  }
+
+  function syncSize() {
+    ROWS = S.board.length; COLS = S.board[0].length;
+    document.documentElement.style.setProperty('--cols', COLS);
+  }
+
+  function unlockedGens() { return UNLOCKS.slice(0, S.unlockedIdx).filter(u => u.kind === 'gen').map(u => u.id); }
+  function unlockedStations() { return UNLOCKS.slice(0, S.unlockedIdx).filter(u => u.kind === 'station').map(u => u.id); }
+  function decoCount() { return UNLOCKS.slice(0, S.unlockedIdx).filter(u => u.kind === 'deco').length; }
+
+  // Un plato es "hacible" si todas sus estaciones y generadores están desbloqueados.
+  function makeable(id) {
+    const g = unlockedGens(), st = unlockedStations();
+    return [...DATA.gensFor(id)].every(x => g.includes(x)) && [...DATA.stationsFor(id)].every(x => st.includes(x));
+  }
+  function availableDishes() { return Object.keys(DISHES).filter(makeable); }
+
   // ---------- Tiempo ----------
   const now = () => Date.now();
 
-  // El "día de juego" empieza a la hora de reset, no a medianoche.
   function gameDay(t = now()) {
     const d = new Date(t - S.settings.resetHour * 3600 * 1000);
     const p = n => String(n).padStart(2, '0');
@@ -79,13 +133,14 @@
 
   function maybeReset() {
     const today = gameDay();
-    if (S.lastReset === today) return;
+    if (S.lastReset === today && S.orders.length) return;
     if (S.pendingSettings) { S.settings = { ...S.settings, ...S.pendingSettings }; S.pendingSettings = null; }
     S.energy = S.settings.energy;
-    S.orders = Array.from({ length: S.settings.orders }, makeOrder);
+    S.orders = makeOrders(S.settings.orders);
     S.dayDone = false;
     S.pausedUntil = 0;
     S.lastReset = today;
+    S.newUnlocks = [];
     save();
   }
 
@@ -98,7 +153,6 @@
 
   function nextOpening(t = now()) {
     const d = new Date(t);
-    d.setSeconds(0, 0);
     for (let i = 0; i < 8; i++) {
       const cand = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i, S.settings.openHour, 0, 0);
       if (S.settings.days.includes(cand.getDay()) && cand.getTime() > t) return cand;
@@ -127,71 +181,70 @@
     S.session = null;
     save();
   }
-
   function checkIdle() {
     if (S.session && now() - S.session.lastTouch > S.settings.idleSec * 1000) endSession();
   }
-
-  // Se llama en cada acción del jugador. Devuelve false si la sesión acaba de cerrarse por tiempo.
   function touch() {
     const t = now();
     checkIdle();
     if (!S.session) S.session = { startedAt: t, lastTouch: t };
     S.session.lastTouch = t;
-    const mins = (t - S.session.startedAt) / 60000;
-    if (mins >= S.settings.stopMin) {
+    if ((t - S.session.startedAt) / 60000 >= S.settings.stopMin) {
       S.pausedUntil = t + S.settings.pauseMin * 60000;
       endSession(t);
       return false;
     }
     return true;
   }
-
   function minutesToday() {
-    const base = S.minutes[gameDay()] || 0;
-    const live = S.session ? (now() - S.session.startedAt) / 60000 : 0;
-    return base + live;
+    return (S.minutes[gameDay()] || 0) + (S.session ? (now() - S.session.startedAt) / 60000 : 0);
   }
-
   function minutesThisWeek() {
-    const t = now();
-    const d = new Date(t);
-    const dow = (d.getDay() + 6) % 7; // lunes = 0
+    const t = now(), dow = (new Date(t).getDay() + 6) % 7;
     let total = S.session ? (t - S.session.startedAt) / 60000 : 0;
     for (let i = 0; i <= dow; i++) total += S.minutes[gameDay(t - i * 86400000)] || 0;
     return total;
   }
 
   // ---------- Pedidos ----------
-  function makeOrder() {
-    const n = Math.random() < 0.6 ? 1 : 2;
-    const items = Array.from({ length: n }, () => ({
-      chain: CHAIN_KEYS[Math.floor(Math.random() * CHAIN_KEYS.length)],
-      level: 3 + Math.floor(Math.random() * 4),
-      done: false,
-    }));
-    return { items, done: false };
+  // Piden platos hacibles con lo desbloqueado. Mezcla de fáciles y difíciles según el costo.
+  function makeOrders(n) {
+    const pool = availableDishes();
+    if (!pool.length) return [];
+    const sorted = pool.slice().sort((a, b) => DATA.cost(a) - DATA.cost(b));
+    const orders = [];
+    for (let i = 0; i < n; i++) {
+      // i=0 el más barato posible … i=n-1 de la mitad cara; con algo de azar
+      const frac = Math.min(1, (i / Math.max(1, n - 1)) * 0.9 + Math.random() * 0.25);
+      const idx = Math.min(sorted.length - 1, Math.floor(frac * sorted.length));
+      let id = sorted[idx];
+      // no repetir un plato más de dos veces en el día si hay alternativas
+      const count = x => orders.reduce((n, o) => n + o.items.filter(y => y.id === x).length, 0);
+      if (count(id) >= 2 && sorted.length > 2) {
+        const alt = sorted.filter(x => count(x) < 2);
+        if (alt.length) id = alt[Math.floor(Math.random() * alt.length)];
+      }
+      const two = Math.random() < 0.3 && DATA.cost(id) <= 8;
+      orders.push({ items: two ? [{ id, done: false }, { id: sorted[Math.floor(Math.random() * Math.min(sorted.length, idx + 1))], done: false }] : [{ id, done: false }], done: false });
+    }
+    return orders;
   }
+
+  function matches(cell, id) { return cell && cell.id && !cell.big && cell.id === id; }
 
   function deliver(orderIdx, r, c) {
     const it = S.board[r][c];
     const order = S.orders[orderIdx];
     if (!it || !order || order.done) return false;
-    const need = order.items.find(x => !x.done && x.chain === it.chain && x.level === it.level);
+    const need = order.items.find(x => !x.done && matches(it, x.id));
     if (!need) return false;
     need.done = true;
     S.board[r][c] = null;
     if (order.items.every(x => x.done)) {
       order.done = true;
       S.stars++;
-      if (S.orders.every(o => o.done)) {
-        S.dayDone = true;
-        // Piezas nuevas desde el último cierre: se anuncian en la pantalla de cierre, no en el tablero.
-        const nowUnlocked = LOCAL.unlockedCount(S.stars);
-        S.newPieces = LOCAL.pieces.slice(S.unlocked, nowUnlocked).map(p => p.name);
-        S.unlocked = nowUnlocked;
-        endSession();
-      }
+      applyUnlocks(true);
+      if (S.orders.every(o => o.done)) { S.dayDone = true; endSession(); }
     }
     save();
     return true;
@@ -215,27 +268,76 @@
     const spot = nearestFree(r, c);
     if (!spot) { flash('Tablero lleno'); return; }
     S.energy--;
-    S.board[spot[0]][spot[1]] = { chain: g.gen, level: Math.random() < 0.8 ? 1 : 2 };
+    S.board[spot[0]][spot[1]] = { id: g.gen + (Math.random() < 0.8 ? 1 : 2) };
     save();
   }
 
-  function canMerge(a, b) {
-    return a && b && !a.gen && !b.gen && a.chain === b.chain && a.level === b.level && a.level < MAX_LEVEL;
+  function isIng(cell) { return cell && cell.id && DATA.isIngredient(cell.id); }
+  function isDish(cell) { return cell && cell.id && DISHES[cell.id]; }
+  function movable(cell) { return cell && cell.id; }
+
+  function mergeResult(a, b) {
+    if (!a || !b || !a.id || !b.id || a.id !== b.id) return null;
+    if (isIng(a)) { const l = +a.id.slice(-1); return l < LEVELS ? { id: a.id.slice(0, -1) + (l + 1) } : null; }
+    if (isDish(a) && !a.big && !b.big) return { id: a.id, big: true };
+    return null;
+  }
+
+  // Poner un ingrediente/plato en una estación. Si completa una receta, sale el plato.
+  function putInStation(r1, c1, r2, c2) {
+    const a = S.board[r1][c1], st = S.board[r2][c2];
+    if (!movable(a) || a.big) return false;
+    const i = st.slots.indexOf(null);
+    if (i < 0) { flash('La estación está llena'); return false; }
+    st.slots[i] = a.id;
+    S.board[r1][c1] = null;
+    tryCook(r2, c2);
+    save();
+    return true;
+  }
+
+  function tryCook(r, c) {
+    const st = S.board[r][c];
+    const have = st.slots.filter(Boolean).slice().sort();
+    const recipe = DATA.recipesAt(st.station).find(rc => {
+      const need = rc.in.slice().sort();
+      return need.length === have.length && need.every((x, i) => x === have[i]);
+    });
+    if (!recipe) return;
+    const spot = nearestFree(r, c);
+    if (!spot) { flash('No hay sitio para el plato'); return; }
+    st.slots = Array(STATIONS[st.station].slots).fill(null);
+    S.board[spot[0]][spot[1]] = { id: recipe.out };
+    if (!S.discovered.includes(recipe.out)) { S.discovered.push(recipe.out); flash(`Receta nueva: ${DISHES[recipe.out].name}`); }
+  }
+
+  // Sacar lo que hay en una estación (toque corto): vuelve al tablero.
+  function emptyStation(r, c) {
+    const st = S.board[r][c];
+    const ids = st.slots.filter(Boolean);
+    if (!ids.length) return;
+    for (const id of ids) {
+      const spot = nearestFree(r, c);
+      if (!spot) { flash('Tablero lleno'); break; }
+      S.board[spot[0]][spot[1]] = { id };
+      st.slots[st.slots.indexOf(id)] = null;
+    }
+    save();
   }
 
   function moveOrMerge(r1, c1, r2, c2) {
     if (r1 === r2 && c1 === c2) return;
     const a = S.board[r1][c1], b = S.board[r2][c2];
-    if (!a || a.gen) return;
+    if (!movable(a)) return;
     if (!b) { S.board[r2][c2] = a; S.board[r1][c1] = null; }
-    else if (canMerge(a, b)) { S.board[r2][c2] = { chain: a.chain, level: a.level + 1 }; S.board[r1][c1] = null; }
-    else return;
+    else if (b.station) { putInStation(r1, c1, r2, c2); return; }
+    else { const m = mergeResult(a, b); if (!m) return; S.board[r2][c2] = m; S.board[r1][c1] = null; }
     save();
   }
 
   function remove(r, c) {
     const it = S.board[r][c];
-    if (!it || it.gen) return;
+    if (!movable(it)) return;
     S.board[r][c] = null;
     save();
   }
@@ -249,25 +351,44 @@
   function flash(msg) {
     noticeEl.textContent = msg; noticeEl.hidden = false;
     clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => { noticeEl.hidden = true; }, 1500);
+    flashTimer = setTimeout(() => { noticeEl.hidden = true; }, 1800);
   }
 
-  function itemEl(it, small) {
+  function itemEl(cell) {
     const el = document.createElement('div');
-    el.className = `item ${it.gen || it.chain}`;
-    if (it.gen) { el.classList.add('gen'); el.textContent = CHAINS[it.gen].icon; if (S.energy <= 0) el.classList.add('empty'); }
-    else {
-      el.innerHTML = ICONS.svg(it.chain, it.level) + `<span class="lvl">${it.level}</span>`;
-      el.dataset.chain = it.chain; el.dataset.level = it.level;
-      if (it.level === MAX_LEVEL) el.classList.add('max');
-      el.title = CHAINS[it.chain].items[it.level - 1];
+    if (cell.gen) {
+      el.className = 'item gen';
+      el.style.background = CHAINS[cell.gen].color;
+      el.textContent = CHAINS[cell.gen].icon;
+      if (S.energy <= 0) el.classList.add('empty');
+    } else if (cell.station) {
+      const st = STATIONS[cell.station];
+      el.className = 'item station';
+      el.style.background = st.color;
+      el.innerHTML = `<span class="st-icon">${st.icon}</span><span class="st-slots">${cell.slots.map(s => `<i class="${s ? 'full' : ''}"></i>`).join('')}</span>`;
+      el.title = st.name;
+    } else {
+      const ing = DATA.isIngredient(cell.id);
+      el.className = 'item ' + (ing ? 'ing' : 'dish');
+      if (cell.big) el.classList.add('big');
+      el.dataset.id = cell.id;
+      if (ing) {
+        const ch = CHAINS[cell.id.slice(0, -1)];
+        el.style.background = ch.bg; el.style.boxShadow = `inset 0 0 0 3px ${ch.color}`;
+        el.innerHTML = ICONS.svg(cell.id) + `<span class="lvl">${cell.id.slice(-1)}</span>`;
+      } else {
+        const d = DISHES[cell.id];
+        el.style.background = DISH_BG[d.color] || '#fbf6ec'; el.style.boxShadow = `inset 0 0 0 3px ${d.color}`;
+        el.innerHTML = ICONS.svg(cell.id);
+      }
+      el.title = DATA.itemName(cell.id) + (cell.big ? ' (grande)' : '');
     }
     return el;
   }
 
   function wantedSet() {
     const w = new Set();
-    for (const o of S.orders) if (!o.done) for (const x of o.items) if (!x.done) w.add(`${x.chain}:${x.level}`);
+    for (const o of S.orders) if (!o.done) for (const x of o.items) if (!x.done) w.add(x.id);
     return w;
   }
 
@@ -277,9 +398,9 @@
     $('stars').textContent = `★ ${S.stars}`;
     $('minutes').textContent = `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`;
 
-    // Pedidos: un ítem pedido que ya está en el tablero se marca; si el pedido entero se puede entregar, la tarjeta también.
+    // Pedidos
     const onBoard = new Set();
-    for (const row of S.board) for (const it of row) if (it && !it.gen) onBoard.add(`${it.chain}:${it.level}`);
+    for (const row of S.board) for (const it of row) if (it && it.id && !it.big) onBoard.add(it.id);
     ordersEl.innerHTML = '';
     S.orders.forEach((o, i) => {
       const el = document.createElement('div');
@@ -287,9 +408,9 @@
       el.dataset.order = i;
       let ready = !o.done;
       for (const x of o.items) {
-        const ie = itemEl({ chain: x.chain, level: x.level }, true);
+        const ie = itemEl({ id: x.id });
         if (x.done) ie.style.opacity = '.3';
-        else if (onBoard.has(`${x.chain}:${x.level}`)) ie.classList.add('have');
+        else if (onBoard.has(x.id)) ie.classList.add('have');
         else ready = false;
         el.appendChild(ie);
       }
@@ -306,7 +427,7 @@
       const it = S.board[r][c];
       if (it) {
         const el = itemEl(it);
-        if (!it.gen && wanted.has(`${it.chain}:${it.level}`)) el.classList.add('wants');
+        if (it.id && !it.big && wanted.has(it.id)) el.classList.add('wants');
         cell.appendChild(el);
       }
       boardEl.appendChild(cell);
@@ -316,8 +437,8 @@
     let lock = null;
     if (!isOpen(t)) lock = ['Cerrado', `Abrimos ${fmtOpening(nextOpening(t))}.`];
     else if (S.dayDone) {
-      const np = S.newPieces || [];
-      const extra = np.length ? ` Hay algo nuevo en el local: ${np.join(', ').toLowerCase()}.` : '';
+      const nu = S.newUnlocks || [];
+      const extra = nu.length ? ` Nuevo: ${nu.join(', ')}.` : '';
       lock = ['Listo por hoy', `${S.stars} estrellas en total.${extra} Los próximos pedidos llegan ${fmtOpening(nextOpening(t))}.`];
     }
     else if (S.pausedUntil > t) {
@@ -328,7 +449,6 @@
     overlay.hidden = !lock;
     if (lock) { $('overlay-title').textContent = lock[0]; $('overlay-text').textContent = lock[1]; }
 
-    // Aviso de sesión larga
     if (!lock && S.session && (t - S.session.startedAt) / 60000 >= S.settings.warnMin) {
       noticeEl.textContent = `Llevás ${Math.floor((t - S.session.startedAt) / 60000)} minutos seguidos`;
       noticeEl.hidden = false;
@@ -336,7 +456,7 @@
   }
 
   // ---------- Drag & drop ----------
-  let drag = null; // { r, c, ghost, moved, startX, startY }
+  let drag = null;
 
   function cellAt(x, y) {
     const el = document.elementFromPoint(x, y);
@@ -370,7 +490,7 @@
     if (!drag) return;
     if (!drag.moved) {
       if (Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) < 6) return;
-      if (drag.it.gen) return; // los generadores no se arrastran
+      if (!movable(drag.it)) return;
       drag.moved = true;
       drag.ghost = itemEl(drag.it);
       drag.ghost.classList.add('dragging');
@@ -378,8 +498,7 @@
       drag.src.classList.add('ghost');
       trashEl.classList.add('show');
       S.orders.forEach((o, i) => {
-        if (!o.done && o.items.some(x => !x.done && x.chain === drag.it.chain && x.level === drag.it.level))
-          ordersEl.children[i].classList.add('accepts');
+        if (!o.done && o.items.some(x => !x.done && matches(drag.it, x.id))) ordersEl.children[i].classList.add('accepts');
       });
     }
     drag.ghost.style.left = e.clientX + 'px';
@@ -404,10 +523,11 @@
 
     if (!d.moved) {
       if (d.it.gen) generate(d.r, d.c);
+      else if (d.it.station) { if (d.it.slots.some(Boolean)) emptyStation(d.r, d.c); else showStation(d.it.station); }
       else {
-        // Toque corto sobre un ítem pedido: se entrega al primer pedido que lo acepte.
-        const i = S.orders.findIndex(o => !o.done && o.items.some(x => !x.done && x.chain === d.it.chain && x.level === d.it.level));
+        const i = S.orders.findIndex(o => !o.done && o.items.some(x => !x.done && matches(d.it, x.id)));
         if (i >= 0) deliver(i, d.r, d.c);
+        else if (isDish(d.it)) showRecipe(d.it.id);
       }
     } else {
       const hit = cellAt(e.clientX, e.clientY);
@@ -420,38 +540,85 @@
   boardEl.addEventListener('pointerup', endDrag);
   boardEl.addEventListener('pointercancel', endDrag);
 
-  // ---------- Cadena de un ítem pedido ----------
-  function showChain(chain, level) {
-    const ch = CHAINS[chain];
-    $('chain-title').textContent = ch.items[level - 1];
-    const row = $('chain-row');
-    row.innerHTML = '';
-    for (let l = 1; l <= MAX_LEVEL; l++) {
-      const el = itemEl({ chain, level: l });
-      el.classList.toggle('goal', l === level);
-      row.appendChild(el);
-      if (l < MAX_LEVEL) { const a = document.createElement('span'); a.className = 'arrow'; a.textContent = '›'; row.appendChild(a); }
+  // ---------- Popups: receta, cadena, estación, libro ----------
+  function haveOnBoard() {
+    const m = {};
+    for (const row of S.board) for (const it of row) {
+      if (it && it.id && !it.big) m[it.id] = (m[it.id] || 0) + 1;
+      if (it && it.station) for (const s of it.slots) if (s) m[s] = (m[s] || 0) + 1;
     }
-    const have = [];
-    for (const r of S.board) for (const it of r) if (it && !it.gen && it.chain === chain && it.level < level) have.push(it.level);
-    const base = 2 ** (level - 1);
-    const haveWorth = have.reduce((s, l) => s + 2 ** (l - 1), 0);
-    const missing = Math.max(0, base - haveWorth);
-    $('chain-text').textContent =
-      `Nivel ${level} de ${ch.name}: equivale a ${base} ${ch.items[0].toLowerCase()}${base > 1 ? 's' : ''} del generador. ` +
-      (have.length ? `Lo que tenés en el tablero de esta cadena vale ${haveWorth}; te faltan unos ${missing} toques.` : `Te faltan unos ${base} toques.`);
+    return m;
+  }
+
+  // Árbol de receta en HTML: plato ← estación(ingredientes…), recursivo.
+  function treeHtml(id, have, depth = 0) {
+    const r = DATA.recipeFor(id);
+    const el = itemEl({ id });
+    const n = have[id] || 0;
+    const line = `<div class="tree-node" style="--d:${depth}">${el.outerHTML}<span class="tree-name">${DATA.itemName(id)}${n ? ` <b>×${n}</b>` : ''}</span>${!r ? `<span class="tree-cost">${DATA.cost(id)} toques</span>` : ''}</div>`;
+    if (!r) {
+      // ingrediente: mostrar su cadena corta si es nivel > 1
+      const lvl = +id.slice(-1);
+      if (lvl > 1) {
+        const ch = id.slice(0, -1);
+        const chain = Array.from({ length: lvl }, (_, i) => itemEl({ id: ch + (i + 1) }).outerHTML).join('<span class="arrow">›</span>');
+        return line + `<div class="tree-chain" style="--d:${depth + 1}">${chain}</div>`;
+      }
+      return line;
+    }
+    const st = STATIONS[r.station];
+    return line + `<div class="tree-station" style="--d:${depth + 1}">${st.icon} ${st.name}</div>` + r.in.map(i => treeHtml(i, have, depth + 1)).join('');
+  }
+
+  function showRecipe(id) {
+    const d = DISHES[id];
+    $('chain-title').textContent = d.name;
+    $('chain-row').innerHTML = treeHtml(id, haveOnBoard());
+    $('chain-text').textContent = `${DATA.cost(id)} toques de generador en total.` + (S.discovered.includes(id) ? '' : ' Todavía no la hiciste.');
     $('chain').hidden = false;
   }
+
+  function showStation(stId) {
+    const st = STATIONS[stId];
+    $('chain-title').textContent = st.name;
+    const list = DATA.recipesAt(stId).filter(r => makeable(r.out));
+    $('chain-row').innerHTML = list.map(r =>
+      `<div class="book-row ${S.discovered.includes(r.out) ? '' : 'undiscovered'}">${r.in.map(i => itemEl({ id: i }).outerHTML).join('<span class="plus">+</span>')}<span class="arrow">›</span>${itemEl({ id: r.out }).outerHTML}<span class="tree-name">${S.discovered.includes(r.out) ? DISHES[r.out].name : '?'}</span></div>`
+    ).join('') || '<p class="muted">Todavía no hay recetas para esta estación.</p>';
+    $('chain-text').textContent = `Arrastrá ingredientes a la estación. Cuando coinciden con una receta, el plato sale al instante. Tocá la estación para vaciarla.`;
+    $('chain').hidden = false;
+  }
+
   ordersEl.addEventListener('click', e => {
     const ie = e.target.closest('.item');
-    if (!ie || !ie.dataset.chain) return;
-    showChain(ie.dataset.chain, +ie.dataset.level);
+    if (!ie || !ie.dataset.id) return;
+    showRecipe(ie.dataset.id);
   });
   $('chain-close').addEventListener('click', () => { $('chain').hidden = true; });
 
+  // Libro de recetas
+  $('book-btn').addEventListener('click', () => {
+    const sts = unlockedStations();
+    const avail = availableDishes();
+    $('chain-title').textContent = `Recetas · ${S.discovered.length} de ${avail.length}`;
+    $('chain-row').innerHTML = sts.map(stId => {
+      const list = DATA.recipesAt(stId).filter(r => makeable(r.out));
+      return `<h3 class="book-h">${STATIONS[stId].icon} ${STATIONS[stId].name}</h3>` + list.map(r =>
+        `<div class="book-row ${S.discovered.includes(r.out) ? '' : 'undiscovered'}" data-dish="${r.out}">${r.in.map(i => itemEl({ id: i }).outerHTML).join('<span class="plus">+</span>')}<span class="arrow">›</span>${itemEl({ id: r.out }).outerHTML}<span class="tree-name">${S.discovered.includes(r.out) ? DISHES[r.out].name : '?'}</span></div>`
+      ).join('');
+    }).join('');
+    const next = UNLOCKS[S.unlockedIdx];
+    $('chain-text').textContent = next ? `Próximo desbloqueo a las ${next.stars} estrellas (tenés ${S.stars}).` : 'Todo desbloqueado.';
+    $('chain').hidden = false;
+  });
+  $('chain-row').addEventListener('click', e => {
+    const row = e.target.closest('.book-row[data-dish]');
+    if (row) showRecipe(row.dataset.dish);
+  });
+
   // ---------- El local ----------
   $('local-btn').addEventListener('click', () => {
-    const { svg, caption } = LOCAL.render(S.stars);
+    const { svg, caption } = LOCAL.render(decoCount());
     $('local-scene').innerHTML = svg;
     $('local-caption').textContent = caption;
     $('local').hidden = false;
@@ -495,6 +662,8 @@
   });
 
   // ---------- Arranque ----------
+  syncSize();
+  applyUnlocks(false);
   maybeReset();
   render();
   setInterval(() => { checkIdle(); maybeReset(); render(); }, 10000);
@@ -504,6 +673,8 @@
 
   if (DEV) window.bistro = {
     S, save, render, generate, moveOrMerge, deliver, remove, touch, maybeReset, gameDay, isOpen, nextOpening,
-    reset: () => { localStorage.removeItem(STORAGE_KEY); location.reload(); },
+    applyUnlocks, makeable, availableDishes, tryCook, putInStation, emptyStation,
+    reset: () => { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(OLD_KEY); location.reload(); },
+    cheat: n => { S.stars = n; applyUnlocks(false); S.orders = makeOrders(S.settings.orders); save(); render(); },
   };
 })();
