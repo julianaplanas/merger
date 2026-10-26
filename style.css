@@ -56,8 +56,8 @@ html, body {
 /* Pedidos */
 .orders {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 .order {
   background: var(--paper);
@@ -75,7 +75,8 @@ html, body {
 .order.ready { border-color: #7f9c6a; background: #f1f5ea; }
 .order.accepts { border-color: #7f9c6a; border-style: dashed; background: #e7f0dd; }
 .order.target { background: #d7e6c6; transform: scale(1.06); border-style: solid; }
-.order .item { position: static; width: 40px; height: 40px; font-size: 13px; flex: none; opacity: .55; }
+.order .item { position: static; width: 32px; height: 32px; font-size: 13px; flex: none; opacity: .55; }
+.order { flex-wrap: wrap; gap: 3px; padding: 6px 4px; }
 .order .item.have { opacity: 1; outline: 3px solid #7f9c6a; outline-offset: 1px; }
 
 /* Tablero */

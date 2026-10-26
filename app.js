@@ -10,7 +10,7 @@
 
   const DEFAULT_SETTINGS = {
     openHour: 8, closeHour: 19, days: [1, 2, 3, 4, 5], resetHour: 7,
-    energy: 120, orders: 6,
+    energy: 120, orders: 4,
     warnMin: 8, stopMin: 12, pauseMin: 20, idleSec: 60,
   };
 
@@ -140,6 +140,7 @@
     if (S.pendingSettings) { S.settings = { ...S.settings, ...S.pendingSettings }; S.pendingSettings = null; }
     S.energy = S.settings.energy;
     S.orders = makeOrders(S.settings.orders);
+    S.delivered = 0;
     S.dayDone = false;
     S.pausedUntil = 0;
     S.lastReset = today;
@@ -210,30 +211,51 @@
   }
 
   // ---------- Pedidos ----------
-  // Piden platos hacibles con lo desbloqueado. Mezcla de fáciles y difíciles según el costo.
-  function makeOrders(n) {
-    const pool = availableDishes();
-    if (!pool.length) return [];
-    const sorted = pool.slice().sort((a, b) => DATA.cost(a) - DATA.cost(b));
-    const orders = [];
-    for (let i = 0; i < n; i++) {
-      // i=0 el más barato posible … i=n-1 de la mitad cara; con algo de azar
-      const frac = Math.min(1, (i / Math.max(1, n - 1)) * 0.9 + Math.random() * 0.25);
-      const idx = Math.min(sorted.length - 1, Math.floor(frac * sorted.length));
-      let id = sorted[idx];
-      // no repetir un plato más de dos veces en el día si hay alternativas
-      const count = x => orders.reduce((n, o) => n + o.items.filter(y => y.id === x).length, 0);
-      if (count(id) >= 2 && sorted.length > 2) {
-        const alt = sorted.filter(x => count(x) < 2);
-        if (alt.length) id = alt[Math.floor(Math.random() * alt.length)];
-      }
-      const two = Math.random() < 0.3 && DATA.cost(id) <= 8;
-      orders.push({ items: two ? [{ id, done: false }, { id: sorted[Math.floor(Math.random() * Math.min(sorted.length, idx + 1))], done: false }] : [{ id, done: false }], done: false });
+  // Siempre hay `orders` pedidos abiertos; al entregar uno llega otro. El día termina cuando se acaba la energía.
+  // Un pedido pide 1–3 platos. Su costo apunta a una fracción de la energía diaria para que un día entero
+  // equivalga a gastar toda la energía, ni más ni menos.
+  function pickDish(sorted, orders, maxCost) {
+    const count = x => orders.reduce((n, o) => n + o.items.filter(y => y.id === x).length, 0);
+    let pool = sorted.filter(x => DATA.cost(x) <= maxCost && count(x) < 2);
+    if (!pool.length) pool = sorted.filter(x => DATA.cost(x) <= maxCost);
+    if (!pool.length) pool = [sorted[0]];
+    // sesgo hacia lo caro dentro del límite: así los pedidos no son siempre lo más trivial
+    const i = Math.floor(Math.pow(Math.random(), 0.6) * pool.length);
+    return pool[Math.min(pool.length - 1, i)];
+  }
+
+  function makeOrder(orders) {
+    const sorted = availableDishes().sort((a, b) => DATA.cost(a) - DATA.cost(b));
+    if (!sorted.length) return null;
+    const maxDish = DATA.cost(sorted[sorted.length - 1]);
+    // objetivo de costo del pedido: entre 8% y 20% de la energía diaria, acotado por lo que existe
+    const target = S.settings.energy * (0.08 + Math.random() * 0.12);
+    const items = [];
+    let spent = 0;
+    while (items.length < 3) {
+      const id = pickDish(sorted, orders.concat([{ items }]), Math.max(DATA.cost(sorted[0]), target - spent));
+      items.push({ id, done: false });
+      spent += DATA.cost(id);
+      if (spent >= target * 0.7 || spent + DATA.cost(sorted[0]) > target) break;
+      if (maxDish >= target && Math.random() < 0.5) break;
     }
+    return { items, done: false };
+  }
+
+  function makeOrders(n) {
+    const orders = [];
+    for (let i = 0; i < n; i++) { const o = makeOrder(orders); if (o) orders.push(o); }
     return orders;
   }
 
   function matches(cell, id) { return cell && cell.id && !cell.big && cell.id === id; }
+
+  // ¿Queda algo en el tablero que se pueda entregar o cocinar hacia un pedido? Si no, con energía 0 el día terminó.
+  function anyDeliverable() {
+    const wanted = wantedSet();
+    for (const row of S.board) for (const it of row) if (it && it.id && !it.big && wanted.has(it.id)) return true;
+    return false;
+  }
 
   function deliver(orderIdx, r, c) {
     const it = S.board[r][c];
@@ -244,10 +266,12 @@
     need.done = true;
     S.board[r][c] = null;
     if (order.items.every(x => x.done)) {
-      order.done = true;
       S.stars++;
+      S.delivered = (S.delivered || 0) + 1;
       applyUnlocks(true);
-      if (S.orders.every(o => o.done)) { S.dayDone = true; endSession(); }
+      // el pedido entregado se reemplaza por uno nuevo (mismo hueco)
+      const nuevo = makeOrder(S.orders.filter(o => o !== order));
+      if (nuevo) S.orders[orderIdx] = nuevo; else order.done = true;
     }
     save();
     return true;
@@ -268,6 +292,7 @@
     const g = S.board[r][c];
     if (!g || !g.gen) return;
     if (S.energy <= 0) { flash('Sin energía por hoy'); return; }
+    if (S.energy === 1) S.lastEnergyAt = now();
     const spot = nearestFree(r, c);
     if (!spot) { flash('Tablero lleno'); return; }
     S.energy--;
@@ -439,15 +464,17 @@
     // Bloqueos
     let lock = null;
     if (!isOpen(t)) lock = ['Cerrado', `Abrimos ${fmtOpening(nextOpening(t))}.`];
-    else if (S.dayDone) {
+    else if (S.energy <= 0 && !anyDeliverable()) {
+      S.dayDone = true;
       const nu = S.newUnlocks || [];
       const extra = nu.length ? ` Nuevo: ${nu.join(', ')}.` : '';
-      lock = ['Listo por hoy', `${S.stars} estrellas en total.${extra} Los próximos pedidos llegan ${fmtOpening(nextOpening(t))}.`];
+      lock = ['Listo por hoy', `${S.delivered || 0} pedidos entregados, ${S.stars} estrellas en total.${extra} La energía vuelve ${fmtOpening(nextOpening(t))}.`];
     }
     else if (S.pausedUntil > t) {
       const m = Math.ceil((S.pausedUntil - t) / 60000);
       lock = ['Pausa', `Llevabas ${S.settings.stopMin} minutos seguidos. El tablero vuelve en ${m} min.`];
     }
+    if (lock && lock[0] === 'Listo por hoy' && S.session) endSession();
     app.classList.toggle('locked', !!lock);
     overlay.hidden = !lock;
     if (lock) { $('overlay-title').textContent = lock[0]; $('overlay-text').textContent = lock[1]; }

@@ -5,7 +5,7 @@ Merge game de cocina hecho a medida: sin publicidad, sin monetización, y pensad
 - Tablero 6×8 (7×9 más adelante). 9 generadores de ingredientes (4 niveles cada uno), 6 estaciones (tabla, horno, sartén, licuadora, cafetera, heladera) y 72 recetas.
 - Las estaciones combinan ingredientes al instante, sin timers ni costo. Solo generar gasta energía.
 - Generadores, estaciones y decoración se desbloquean con estrellas en una lista única (`data.js`).
-- 120 de energía por día, 6 pedidos de platos. Entregar los 6 cierra el día.
+- 120 de energía por día. Siempre hay 4 pedidos abiertos; al entregar uno llega otro, con un costo calibrado para que el día entero sea gastar toda la energía. Sin energía ni nada entregable, el día termina.
 - Abre de 8:00 a 19:00 de lunes a viernes. Reset a las 7:00.
 - Sesiones: aviso a los 8 min seguidos, cierre a los 12, pausa de 20.
 - Contador de minutos jugados hoy y esta semana, siempre visible.

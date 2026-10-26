@@ -1,4 +1,4 @@
-const CACHE = 'bistro-v7';
+const CACHE = 'bistro-v8';
 const FILES = ['./', './index.html', './style.css', './app.js', './local.js', './icons.js', './data.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
