@@ -27,11 +27,11 @@
 
   // ---------- Estado ----------
   let S = load();
-  let ROWS = 9, COLS = 7;
+  let ROWS = 8, COLS = 6;
 
   function freshState() {
     return {
-      board: Array.from({ length: 9 }, () => Array(7).fill(null)),
+      board: Array.from({ length: 8 }, () => Array(6).fill(null)),
       wide: false,
       energy: DEFAULT_SETTINGS.energy,
       orders: [],
@@ -55,6 +55,9 @@
       if (raw) {
         const s = JSON.parse(raw);
         s.settings = { ...DEFAULT_SETTINGS, ...(s.settings || {}) };
+        if (s.board.length === 9 && !s.wide) { // tablero de la primera v2 (7×9): se reinicia a 6×8
+          s.board = Array.from({ length: 8 }, () => Array(6).fill(null)); s.unlockedIdx = 0;
+        }
         return s;
       }
       // Migración desde v1: se conservan estrellas, minutos y ajustes; el tablero se reinicia.
@@ -98,10 +101,10 @@
   function widen() {
     if (S.wide) return;
     S.wide = true;
-    const nb = Array.from({ length: 10 }, () => Array(8).fill(null));
-    for (let r = 0; r < 9; r++) for (let c = 0; c < 7; c++) nb[r][c] = S.board[r][c];
-    // generadores de la fila 8 pasan a la 9
-    for (let c = 0; c < 7; c++) if (nb[8][c] && nb[8][c].gen) { nb[9][c] = nb[8][c]; nb[8][c] = null; }
+    const nb = Array.from({ length: 9 }, () => Array(7).fill(null));
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 6; c++) nb[r][c] = S.board[r][c];
+    // generadores de las filas 6–7 bajan a 7–8
+    for (let c = 0; c < 6; c++) for (const r of [7, 6]) if (nb[r][c] && nb[r][c].gen) { nb[r + 1][c] = nb[r][c]; nb[r][c] = null; }
     S.board = nb;
     syncSize();
   }

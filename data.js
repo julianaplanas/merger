@@ -156,14 +156,14 @@ window.DATA = (() => {
     { stars: 120, kind: 'deco', id: 10 },
     { stars: 130, kind: 'gen', id: 'choco' },
     { stars: 140, kind: 'deco', id: 11 },
-    { stars: 150, kind: 'board', id: 'wide' },   // tablero pasa a 8×10
+    { stars: 150, kind: 'board', id: 'wide' },   // tablero pasa a 7×9
   ];
   // El resto de la decoración (12–29) sigue cada 12 estrellas después de la última entrada.
   for (let i = 12; i < 30; i++) UNLOCKS.push({ stars: 150 + (i - 11) * 12, kind: 'deco', id: i });
 
-  // Posiciones fijas de generadores y estaciones en el tablero (fila, col). Fila inferior: generadores. Fila superior: estaciones.
-  const GEN_POS = { pan: [8, 0], huerta: [8, 1], lacteo: [8, 2], huevo: [8, 3], fruta: [8, 4], dulce: [8, 5], especia: [8, 6], cafe: [7, 0], choco: [7, 6] };
-  const STATION_POS = { tabla: [0, 0], horno: [0, 6], sarten: [0, 3], licuadora: [0, 1], heladera: [0, 5], cafetera: [0, 2] };
+  // Posiciones fijas en el tablero 6×8 (fila, col). Filas 6–7: generadores. Fila 0: estaciones.
+  const GEN_POS = { pan: [7, 0], huerta: [7, 1], lacteo: [7, 2], huevo: [7, 3], fruta: [7, 4], dulce: [7, 5], especia: [6, 0], cafe: [6, 5], choco: [6, 1] };
+  const STATION_POS = { tabla: [0, 0], horno: [0, 5], sarten: [0, 2], licuadora: [0, 1], heladera: [0, 4], cafetera: [0, 3] };
 
   // ---------- Utilidades ----------
   function isIngredient(id) { return /^[a-z]+[1-4]$/.test(id) && CHAINS[id.slice(0, -1)]; }

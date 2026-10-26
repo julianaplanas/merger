@@ -12,9 +12,9 @@
   --cafe: #8b5e3c;
   --dulce: #c97b8e;
 
-  --cols: 7;
-  --rows: 9;
-  --gap: 4px;
+  --cols: 6;
+  --rows: 8;
+  --gap: 5px;
 }
 
 * { box-sizing: border-box; }
@@ -75,7 +75,7 @@ html, body {
 .order.ready { border-color: #7f9c6a; background: #f1f5ea; }
 .order.accepts { border-color: #7f9c6a; border-style: dashed; background: #e7f0dd; }
 .order.target { background: #d7e6c6; transform: scale(1.06); border-style: solid; }
-.order .item { position: static; width: 34px; height: 34px; font-size: 13px; flex: none; opacity: .55; }
+.order .item { position: static; width: 40px; height: 40px; font-size: 13px; flex: none; opacity: .55; }
 .order .item.have { opacity: 1; outline: 3px solid #7f9c6a; outline-offset: 1px; }
 
 /* Tablero */
@@ -101,8 +101,8 @@ html, body {
 
 .item {
   position: absolute;
-  inset: 4px;
-  border-radius: 10px;
+  inset: 2px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -114,15 +114,16 @@ html, body {
   touch-action: none;
   cursor: grab;
 }
-.item svg { width: 82%; height: 82%; display: block; }
+.item svg { width: 96%; height: 96%; display: block; }
 .item .lvl {
   position: absolute; right: 3px; bottom: 2px;
-  font-size: 9px; font-weight: 700; color: var(--ink); opacity: .55;
+  font-size: 10px; font-weight: 700; color: var(--ink); opacity: .6;
 }
 .item.gen {
   border-radius: 50%;
   box-shadow: none;
   color: #fff;
+  font-size: 26px;
   border: 3px dashed rgba(255,255,255,.7);
   font-size: 22px;
   cursor: pointer;
@@ -133,7 +134,7 @@ html, body {
   flex-direction: column; gap: 2px;
   cursor: pointer;
 }
-.item.station .st-icon { font-size: 20px; line-height: 1; }
+.item.station .st-icon { font-size: 26px; line-height: 1; }
 .item.station .st-slots { display: flex; gap: 3px; }
 .item.station .st-slots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.35); }
 .item.station .st-slots i.full { background: #fff; }
@@ -143,7 +144,7 @@ html, body {
 .item.dragging {
   position: fixed;
   inset: auto;
-  width: 48px; height: 48px;
+  width: 56px; height: 56px;
   z-index: 50;
   pointer-events: none;
   transform: translate(-50%, -50%) scale(1.1);
