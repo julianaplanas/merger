@@ -695,6 +695,10 @@
   syncSize();
   applyUnlocks(false);
   maybeReset();
+  // Pedidos cerrados que hayan quedado de una versión anterior, o un número distinto de huecos: se rellenan.
+  S.orders = S.orders.filter(o => !o.done).slice(0, S.settings.orders);
+  while (S.orders.length < S.settings.orders) { const o = makeOrder(S.orders); if (!o) break; S.orders.push(o); }
+  save();
   render();
   setInterval(() => { checkIdle(); maybeReset(); render(); }, 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkIdle(); maybeReset(); render(); } });
