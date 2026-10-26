@@ -437,7 +437,7 @@
       let ready = !o.done;
       for (const x of o.items) {
         const ie = itemEl({ id: x.id });
-        if (x.done) ie.style.opacity = '.3';
+        if (x.done) ie.classList.add('done');
         else if (onBoard.has(x.id)) ie.classList.add('have');
         else ready = false;
         el.appendChild(ie);

@@ -75,9 +75,16 @@ html, body {
 .order.ready { border-color: #7f9c6a; background: #f1f5ea; }
 .order.accepts { border-color: #7f9c6a; border-style: dashed; background: #e7f0dd; }
 .order.target { background: #d7e6c6; transform: scale(1.06); border-style: solid; }
-.order .item { position: static; width: 32px; height: 32px; font-size: 13px; flex: none; opacity: .55; }
-.order { flex-wrap: wrap; gap: 3px; padding: 6px 4px; }
-.order .item.have { opacity: 1; outline: 3px solid #7f9c6a; outline-offset: 1px; }
+.order .item { position: static; width: 36px; height: 36px; font-size: 13px; flex: none; }
+.order { flex-wrap: wrap; gap: 4px; padding: 7px 4px; }
+.order .item.have { outline: 3px solid #5f8f4a; outline-offset: 1px; }
+.order .item.have::before {
+  content: "✓"; position: absolute; top: -6px; right: -6px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #5f8f4a; color: #fff; font-size: 11px; line-height: 16px; text-align: center; font-weight: 700;
+}
+.order .item { position: relative; }
+.order .item.done { opacity: .25; }
 
 /* Tablero */
 .board-wrap { position: relative; }
