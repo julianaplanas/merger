@@ -79,16 +79,19 @@
   }
 
   // ---------- Desbloqueos ----------
+  const pendingCards = []; // desbloqueos por mostrar en tarjeta
+
   function applyUnlocks(announce) {
-    const news = [];
+    const news = [], cards = [];
     while (S.unlockedIdx < UNLOCKS.length && UNLOCKS[S.unlockedIdx].stars <= S.stars) {
       const u = UNLOCKS[S.unlockedIdx++];
+      cards.push(u);
       if (u.kind === 'gen') { place({ gen: u.id }, GEN_POS[u.id]); news.push(`generador de ${CHAINS[u.id].name.toLowerCase()}`); }
       else if (u.kind === 'station') { place({ station: u.id, slots: Array(STATIONS[u.id].slots).fill(null) }, STATION_POS[u.id]); news.push(`${STATIONS[u.id].name.toLowerCase()}`); }
       else if (u.kind === 'deco') { news.push(`${LOCAL.pieces[u.id].name.toLowerCase()} en el local`); }
       else if (u.kind === 'board') { widen(); news.push('tablero más grande'); }
     }
-    if (announce && news.length) S.newUnlocks = (S.newUnlocks || []).concat(news);
+    if (announce && news.length) { S.newUnlocks = (S.newUnlocks || []).concat(news); pendingCards.push(...cards); }
     return news;
   }
 
@@ -112,6 +115,13 @@
   function syncSize() {
     ROWS = S.board.length; COLS = S.board[0].length;
     document.documentElement.style.setProperty('--cols', COLS);
+  }
+
+  function unlockName(u) {
+    if (u.kind === 'gen') return `generador de ${CHAINS[u.id].name.toLowerCase()}`;
+    if (u.kind === 'station') return STATIONS[u.id].name.toLowerCase();
+    if (u.kind === 'deco') return LOCAL.pieces[u.id].name.toLowerCase();
+    return 'tablero más grande';
   }
 
   function unlockedGens() { return UNLOCKS.slice(0, S.unlockedIdx).filter(u => u.kind === 'gen').map(u => u.id); }
@@ -460,6 +470,16 @@
     starsEl.textContent = `★ ${S.stars}`;
     $('minutes').textContent = `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`;
 
+    // Cabecera del local: escena recortada + próximo desbloqueo
+    const strip = $('local-strip');
+    const key = `${decoCount()}|${S.tables || 0}`;
+    if (strip.dataset.key !== key) { strip.dataset.key = key; strip.innerHTML = LOCAL.render(decoCount(), S.tables || 0).svg; }
+    const next = UNLOCKS[S.unlockedIdx];
+    const prevStars = S.unlockedIdx ? UNLOCKS[S.unlockedIdx - 1].stars : 0;
+    const pct = next ? Math.min(100, Math.round(100 * (S.stars - prevStars) / Math.max(1, next.stars - prevStars))) : 100;
+    $('next-fill').style.width = pct + '%';
+    $('next-text').textContent = next ? `Próximo: ${unlockName(next)} · ${next.stars - S.stars} ★` : 'Todo desbloqueado';
+
     // Pedidos
     const onBoard = new Set();
     for (const row of S.board) for (const it of row) if (it && it.id && !it.big) onBoard.add(it.id);
@@ -528,6 +548,8 @@
     app.classList.toggle('locked', !!lock);
     overlay.hidden = !lock;
     if (lock) { $('overlay-title').textContent = lock[0]; $('overlay-text').textContent = lock[1]; }
+
+    if (!lock && pendingCards.length && $('unlock').hidden) showUnlockCard(pendingCards.shift());
 
     if (!lock && S.session && (t - S.session.startedAt) / 60000 >= S.settings.warnMin) {
       noticeEl.textContent = `Llevás ${Math.floor((t - S.session.startedAt) / 60000)} minutos seguidos`;
@@ -695,6 +717,31 @@
     const row = e.target.closest('.book-row[data-dish]');
     if (row) showRecipe(row.dataset.dish);
   });
+
+  // ---------- Tarjeta de desbloqueo ----------
+  function showUnlockCard(u) {
+    let art = '', title = '', text = '';
+    if (u.kind === 'deco') {
+      const p = LOCAL.pieces[u.id];
+      title = p.name; text = 'Nueva pieza en el local.';
+      art = LOCAL.renderPiece(u.id);
+    } else if (u.kind === 'gen') {
+      const ch = CHAINS[u.id];
+      title = `Generador de ${ch.name.toLowerCase()}`; text = `Produce ${ch.items.map(x => x.toLowerCase()).join(' → ')}. Ya está en el tablero.`;
+      art = `<div class="item gen" style="position:static;width:72px;height:72px;font-size:36px;background:${ch.color}">${ch.icon}</div>`;
+    } else if (u.kind === 'station') {
+      const st = STATIONS[u.id];
+      const n = DATA.recipesAt(u.id).length;
+      title = st.name; text = `Nueva estación con ${n} recetas por descubrir. Ya está en el tablero.`;
+      art = `<div class="item station" style="position:static;width:72px;height:72px;background:${st.color}"><span class="st-icon" style="font-size:36px">${st.icon}</span></div>`;
+    } else { title = 'Tablero más grande'; text = 'Una fila y una columna más.'; art = '<div style="font-size:48px">▦</div>'; }
+    $('unlock-title').textContent = title;
+    $('unlock-art').innerHTML = art;
+    $('unlock-text').textContent = text;
+    $('unlock').hidden = false;
+  }
+  $('unlock-close').addEventListener('click', () => { $('unlock').hidden = true; render(); });
+  $('local-strip').addEventListener('click', () => $('local-btn').click());
 
   // ---------- El local ----------
   $('local-btn').addEventListener('click', () => {

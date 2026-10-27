@@ -21,6 +21,11 @@
       <button class="icon-btn" id="settings-btn" aria-label="Ajustes">⚙</button>
     </header>
 
+    <section class="local-head">
+      <div class="local-strip" id="local-strip" title="El local"></div>
+      <div class="next"><div class="next-bar"><div class="next-fill" id="next-fill"></div></div><div class="next-text" id="next-text"></div></div>
+    </section>
+
     <section class="orders" id="orders"></section>
 
     <section class="board-wrap">
@@ -43,6 +48,16 @@
         <div class="chain-body" id="chain-row"></div>
         <p id="chain-text"></p>
         <div class="row"><button type="button" id="chain-close">Cerrar</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="unlock" hidden>
+      <div class="card unlock-card">
+        <p class="muted small">Desbloqueado</p>
+        <div class="unlock-art" id="unlock-art"></div>
+        <h1 id="unlock-title"></h1>
+        <p id="unlock-text"></p>
+        <div class="row"><button type="button" class="primary" id="unlock-close">Seguir</button></div>
       </div>
     </div>
 

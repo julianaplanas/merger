@@ -114,5 +114,22 @@ window.LOCAL = (() => {
     return { svg, caption, n };
   }
 
-  return { pieces, COST, unlockedCount, render };
+  // Una pieza sola, recortada a su zona, para la tarjeta de desbloqueo.
+  function renderPiece(i) {
+    const p = pieces[i];
+    // bounding box aproximado: se calcula de los números del path (suficiente para encuadrar)
+    const nums = [...p.svg.matchAll(/(?:x|cx|x1)="(-?[\d.]+)"[^>]*?(?:y|cy|y1)="(-?[\d.]+)"/g)].map(m => [+m[1], +m[2]]);
+    const dm = [...p.svg.matchAll(/d="M\s*(-?[\d.]+)\s+(-?[\d.]+)/g)].map(m => [+m[1], +m[2]]);
+    const pts = nums.concat(dm);
+    let x0 = 0, y0 = 0, x1 = 360, y1 = 240;
+    if (pts.length) {
+      const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+      const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+      const w = Math.max(90, Math.max(...xs) - Math.min(...xs) + 50), h = w * 110 / 160;
+      x0 = Math.max(0, Math.min(360 - w, cx - w / 2)); y0 = Math.max(0, Math.min(240 - h, cy - h / 2)); x1 = w; y1 = h;
+    }
+    return `<svg viewBox="${x0} ${y0} ${x1} ${y1}" xmlns="http://www.w3.org/2000/svg">${base}${pieces.slice(0, i + 1).map(q => q.svg).join('')}</svg>`;
+  }
+
+  return { pieces, COST, unlockedCount, render, renderPiece };
 })();

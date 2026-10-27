@@ -53,6 +53,27 @@ html, body {
   cursor: pointer; padding: 4px;
 }
 
+/* Cabecera del local */
+.local-head { display: flex; flex-direction: column; gap: 6px; }
+.local-strip {
+  height: 92px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+  background: #f1e4cf; cursor: pointer; line-height: 0;
+}
+.local-strip svg { width: 100%; height: 240px; margin-top: -92px; } /* muestra la franja media: pared baja + suelo */
+.next { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.next-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.next-fill { height: 100%; background: #c9a24a; border-radius: 3px; transition: width .4s; }
+.next-text { white-space: nowrap; }
+
+.unlock-card .unlock-art { display: flex; justify-content: center; margin: 8px 0 12px; }
+.unlock-card .unlock-art svg { width: 160px; height: 110px; border-radius: 12px; }
+.unlock-card .small { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+.unlock-card .row { display: flex; justify-content: center; margin-top: 16px; }
+.unlock-card button {
+  font: inherit; padding: 8px 20px; border-radius: 10px;
+  border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer;
+}
+
 /* Pedidos */
 .orders {
   display: grid;
