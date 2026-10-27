@@ -8,7 +8,10 @@ window.LOCAL = (() => {
   const base = `
     <rect x="0" y="0" width="360" height="160" fill="${W}"/>
     <rect x="0" y="160" width="360" height="80" fill="#d9c3a3"/>
-    <rect x="0" y="156" width="360" height="6" fill="${WOOD2}"/>`;
+    <rect x="0" y="156" width="360" height="6" fill="${WOOD2}"/>
+    <rect x="140" y="30" width="80" height="60" fill="#dde7ee"/><rect x="140" y="30" width="80" height="60" fill="none" stroke="${CREAM}" stroke-width="4"/>
+    <line x1="180" y1="30" x2="180" y2="90" stroke="${CREAM}" stroke-width="3"/><line x1="140" y1="60" x2="220" y2="60" stroke="${CREAM}" stroke-width="3"/>
+    <rect x="148" y="4" width="64" height="16" rx="4" fill="${INK}"/><text x="180" y="16" text-anchor="middle" font-size="10" font-family="ui-rounded, system-ui, sans-serif" font-weight="700" fill="${CREAM}">BISTRÓ</text>`;
 
   // Cada pieza: { name, svg }. El orden es el orden de desbloqueo.
   const pieces = [
@@ -41,7 +44,6 @@ window.LOCAL = (() => {
     { name: 'Cesta de pan', svg: `
       <path d="M8 126 Q16 110 24 126 Z" fill="${WOOD2}"/><ellipse cx="16" cy="122" rx="10" ry="4" fill="#d9a066"/><ellipse cx="20" cy="118" rx="6" ry="3" fill="#e7b982"/>` },
     { name: 'Cortinas', svg: `
-      <rect x="140" y="30" width="80" height="60" fill="#dde7ee"/><rect x="140" y="30" width="80" height="60" fill="none" stroke="${CREAM}" stroke-width="4"/>
       <path d="M138 28 h18 q-4 30 2 64 h-20 Z" fill="${TERRA}"/><path d="M222 28 h-18 q4 30 -2 64 h20 Z" fill="${TERRA}"/>` },
     { name: 'Alfombra', svg: `<ellipse cx="180" cy="226" rx="70" ry="9" fill="${ROSE}" opacity=".7"/><ellipse cx="180" cy="226" rx="50" ry="6" fill="${CREAM}" opacity=".5"/>` },
     { name: 'Pizarra con menú', svg: `
@@ -69,8 +71,7 @@ window.LOCAL = (() => {
       <rect x="172" y="84" width="16" height="10" rx="2" fill="${TERRA}"/><ellipse cx="180" cy="80" rx="10" ry="7" fill="${OLIVE}"/>` },
     { name: 'Toldo', svg: `
       <path d="M130 22 H230 L226 32 H134 Z" fill="${TERRA}"/><g fill="${CREAM}"><rect x="146" y="22" width="12" height="10"/><rect x="170" y="22" width="12" height="10"/><rect x="194" y="22" width="12" height="10"/><rect x="218" y="22" width="12" height="10"/></g>` },
-    { name: 'Cartel "Bistró"', svg: `
-      <rect x="148" y="4" width="64" height="16" rx="4" fill="${INK}"/><text x="180" y="16" text-anchor="middle" font-size="10" font-family="ui-rounded, system-ui, sans-serif" font-weight="700" fill="${CREAM}">BISTRÓ</text>` },
+    { name: 'Felpudo', svg: `<rect x="150" y="230" width="60" height="8" rx="2" fill="${WOOD2}"/><rect x="154" y="232" width="52" height="4" fill="${TERRA}" opacity=".6"/>` },
     { name: 'Pizarra de cafés', svg: `
       <rect x="8" y="48" width="40" height="30" rx="2" fill="${INK}"/><g stroke="${CREAM}" stroke-width="2"><line x1="14" y1="58" x2="40" y2="58"/><line x1="14" y1="66" x2="34" y2="66"/></g><circle cx="42" cy="68" r="3" fill="${TERRA}"/>` },
     { name: 'Botellas', svg: `
@@ -105,13 +106,16 @@ window.LOCAL = (() => {
   function render(n, tables = 0) {
     n = Math.min(pieces.length, n);
     const people = Array.from({ length: Math.min(6, tables) }, (_, i) => customer(i)).join('');
-    const svg = `<svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" width="100%">${base}${pieces.slice(0, n).map(p => p.svg).join('')}${people}</svg>`;
+    const layers = `${base}${pieces.slice(0, n).map(p => p.svg).join('')}${people}`;
+    const svg = `<svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" width="100%">${layers}</svg>`;
+    // tira apaisada para la cabecera: de y=60 a y=232 (deja fuera el cartel, muestra mesas y clientes)
+    const strip = `<svg viewBox="0 60 360 172" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">${layers}</svg>`;
     const next = n < pieces.length ? pieces[n] : null;
     const today = tables ? ` Hoy ${tables === 1 ? 'una mesa' : tables + ' mesas'} ${tables === 1 ? 'ha comido' : 'han comido'} aquí.` : '';
     const caption = (next
       ? `${n} de ${pieces.length} piezas. Próxima: ${next.name}.`
       : `${pieces.length} de ${pieces.length} piezas. El local está completo.`) + today;
-    return { svg, caption, n };
+    return { svg, strip, caption, n };
   }
 
   // Una pieza sola, recortada a su zona, para la tarjeta de desbloqueo.

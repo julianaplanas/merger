@@ -473,7 +473,7 @@
     // Cabecera del local: escena recortada + próximo desbloqueo
     const strip = $('local-strip');
     const key = `${decoCount()}|${S.tables || 0}`;
-    if (strip.dataset.key !== key) { strip.dataset.key = key; strip.innerHTML = LOCAL.render(decoCount(), S.tables || 0).svg; }
+    if (strip.dataset.key !== key) { strip.dataset.key = key; strip.innerHTML = LOCAL.render(decoCount(), S.tables || 0).strip; }
     const next = UNLOCKS[S.unlockedIdx];
     const prevStars = S.unlockedIdx ? UNLOCKS[S.unlockedIdx - 1].stars : 0;
     const pct = next ? Math.min(100, Math.round(100 * (S.stars - prevStars) / Math.max(1, next.stars - prevStars))) : 100;
