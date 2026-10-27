@@ -86,22 +86,31 @@ window.LOCAL = (() => {
       <rect x="348" y="110" width="3" height="110" fill="${INK}"/><rect x="340" y="216" width="18" height="4" rx="2" fill="${INK}"/><path d="M336 118 h26 M340 112 h20" stroke="${INK}" stroke-width="3"/><path d="M338 122 q-6 20 2 32 h8 q6 -14 0 -32 Z" fill="${SLATE}"/>` },
     { name: 'Espejo', svg: `
       <ellipse cx="312" cy="118" rx="18" ry="24" fill="#dde7ee" stroke="${WOOD2}" stroke-width="4"/><path d="M304 104 q6 -4 12 2" stroke="${CREAM}" stroke-width="2" fill="none"/>` },
-    { name: 'Un cliente', svg: `
-      <circle cx="107" cy="150" r="9" fill="#e7b982"/><path d="M96 160 q11 -8 22 0 v22 h-22 Z" fill="${SLATE}"/><rect x="100" y="152" width="14" height="6" rx="3" fill="${INK}" opacity=".6"/>` },
+    { name: 'Jarrón', svg: `<path d="M46 44 q-4 10 0 20 h8 q4 -10 0 -20 Z" fill="${SLATE}"/><g><circle cx="47" cy="40" r="3" fill="${ROSE}"/><circle cx="53" cy="38" r="3" fill="#f7d98b"/><circle cx="50" cy="43" r="2" fill="${TERRA}"/></g>` },
   ];
 
   const COST = 15;
 
   function unlockedCount(stars) { return Math.min(pieces.length, Math.floor(stars / COST)); }
 
-  // n = piezas desbloqueadas (lo decide la lista de desbloqueos en data.js)
-  function render(n) {
+  // Clientes sentados: uno por mesa completada hoy, hasta 6, en sitios fijos de la escena.
+  const SEATS = [[107, 150], [253, 150], [300, 190], [330, 190], [160, 150], [200, 150]];
+  const SHIRTS = ['#5d6b78', '#c9643f', '#7f9c6a', '#c97b8e', '#e4b45a', '#8fa7b8'];
+  function customer(i) {
+    const [x, y] = SEATS[i % SEATS.length];
+    return `<circle cx="${x}" cy="${y}" r="9" fill="#e7b982"/><path d="M${x - 11} ${y + 10} q11 -8 22 0 v22 h-22 Z" fill="${SHIRTS[i % SHIRTS.length]}"/><rect x="${x - 7}" y="${y + 2}" width="14" height="6" rx="3" fill="#3d3129" opacity=".6"/>`;
+  }
+
+  // n = piezas desbloqueadas (lo decide la lista de desbloqueos en data.js); tables = mesas completadas hoy
+  function render(n, tables = 0) {
     n = Math.min(pieces.length, n);
-    const svg = `<svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" width="100%">${base}${pieces.slice(0, n).map(p => p.svg).join('')}</svg>`;
+    const people = Array.from({ length: Math.min(6, tables) }, (_, i) => customer(i)).join('');
+    const svg = `<svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" width="100%">${base}${pieces.slice(0, n).map(p => p.svg).join('')}${people}</svg>`;
     const next = n < pieces.length ? pieces[n] : null;
-    const caption = next
+    const today = tables ? ` Hoy ${tables === 1 ? 'una mesa' : tables + ' mesas'} ${tables === 1 ? 'ha comido' : 'han comido'} aquí.` : '';
+    const caption = (next
       ? `${n} de ${pieces.length} piezas. Próxima: ${next.name}.`
-      : `${pieces.length} de ${pieces.length} piezas. El local está completo.`;
+      : `${pieces.length} de ${pieces.length} piezas. El local está completo.`) + today;
     return { svg, caption, n };
   }
 

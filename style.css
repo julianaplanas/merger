@@ -63,20 +63,32 @@ html, body {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 8px;
+  padding: 6px 4px 7px;
   display: flex;
-  gap: 6px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
   align-items: center;
-  min-height: 52px;
+  min-height: 78px;
   transition: background .15s, transform .15s;
 }
-.order.done { opacity: .35; }
+.order .who { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); max-width: 100%; }
+.order .who .face { font-size: 14px; }
+.order .who .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order .dishes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.order.done { background: #eef3e6; border-color: #cfdcc1; }
+.order.done .who { color: #5f8f4a; }
+.order .thanks { font-size: 13px; font-weight: 700; color: #5f8f4a; margin: auto 0; }
+.order .thanks.pop { animation: pop .5s ease-out; }
+@keyframes pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); } }
+#stars.bump { animation: bump .5s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); color: #c9643f; } 100% { transform: scale(1); } }
+.item.gift { animation: gift 1.2s ease-out 2; }
+@keyframes gift { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); box-shadow: 0 0 0 4px #e4b45a; } }
 .order.ready { border-color: #7f9c6a; background: #f1f5ea; }
 .order.accepts { border-color: #7f9c6a; border-style: dashed; background: #e7f0dd; }
 .order.target { background: #d7e6c6; transform: scale(1.06); border-style: solid; }
 .order .item { position: static; width: 36px; height: 36px; font-size: 13px; flex: none; }
-.order { flex-wrap: wrap; gap: 4px; padding: 7px 4px; }
+
 .order .item.have { outline: 3px solid #5f8f4a; outline-offset: 1px; }
 .order .item.have::before {
   content: "✓"; position: absolute; top: -6px; right: -6px;

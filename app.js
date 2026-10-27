@@ -141,6 +141,7 @@
     S.energy = S.settings.energy;
     S.orders = makeOrders(S.settings.orders);
     S.delivered = 0;
+    S.tables = 0;
     S.dayDone = false;
     S.pausedUntil = 0;
     S.lastReset = today;
@@ -224,6 +225,15 @@
     return pool[Math.min(pool.length - 1, i)];
   }
 
+  const NAMES = ['Lucía', 'Mateo', 'Sofía', 'Martín', 'Valentina', 'Hugo', 'Emma', 'Lucas', 'Olivia', 'Leo', 'Julia', 'Pablo', 'Martina', 'Daniel',
+    'Carla', 'Álvaro', 'Noa', 'Adrián', 'Vera', 'Bruno', 'Alma', 'Iker', 'Chloe', 'Nico', 'Lola', 'Enzo', 'Jimena', 'Teo', 'Candela', 'Gael'];
+  const FACES = ['🙂', '😊', '😄', '🧐', '😌', '🤓', '😎', '🥰', '😇', '🙃', '🤗', '😋'];
+  function makeCustomer(orders) {
+    const used = new Set(orders.map(o => o.customer && o.customer.name));
+    const free = NAMES.filter(n => !used.has(n));
+    return { name: free[Math.floor(Math.random() * free.length)], face: FACES[Math.floor(Math.random() * FACES.length)] };
+  }
+
   function makeOrder(orders) {
     const sorted = availableDishes().sort((a, b) => DATA.cost(a) - DATA.cost(b));
     if (!sorted.length) return null;
@@ -239,7 +249,7 @@
       if (spent >= target * 0.7 || spent + DATA.cost(sorted[0]) > target) break;
       if (maxDish >= target && Math.random() < 0.5) break;
     }
-    return { items, done: false };
+    return { items, done: false, customer: makeCustomer(orders) };
   }
 
   function makeOrders(n) {
@@ -266,15 +276,35 @@
     need.done = true;
     S.board[r][c] = null;
     if (order.items.every(x => x.done)) {
+      order.done = true;
+      order.thanksAt = now();
       S.stars++;
       S.delivered = (S.delivered || 0) + 1;
+      if (S.orders.every(o => o.done)) finishTable();
       applyUnlocks(true);
-      // el pedido entregado se reemplaza por uno nuevo (mismo hueco)
-      const nuevo = makeOrder(S.orders.filter(o => o !== order));
-      if (nuevo) S.orders[orderIdx] = nuevo; else order.done = true;
     }
     save();
     return true;
+  }
+
+  // La mesa entera se levanta: propina (+2 estrellas y un ingrediente útil para la mesa siguiente) y llegan clientes nuevos.
+  function finishTable() {
+    S.tables = (S.tables || 0) + 1;
+    S.stars += 2;
+    const fresh = makeOrders(S.settings.orders);
+    // regalo: nivel 3 de una cadena que la mesa nueva necesita
+    const needs = new Set();
+    for (const o of fresh) for (const x of o.items) DATA.gensFor(x.id).forEach(g => needs.add(g));
+    const gens = unlockedGens().filter(g => needs.has(g));
+    const chain = gens.length ? gens[Math.floor(Math.random() * gens.length)] : unlockedGens()[0];
+    let giftMsg = '';
+    if (chain) {
+      const spot = nearestFree(3, 2);
+      if (spot) { S.board[spot[0]][spot[1]] = { id: chain + '3', gift: true }; giftMsg = ` y te dejan ${DATA.ingName(chain + '3').toLowerCase()} de propina`; }
+    }
+    S.lastTable = { at: now(), names: S.orders.map(o => o.customer ? o.customer.name : '').filter(Boolean) };
+    S.orders = fresh;
+    flash(`Mesa completa: +2 estrellas${giftMsg}.`, 3500);
   }
 
   // ---------- Tablero ----------
@@ -357,6 +387,7 @@
     if (r1 === r2 && c1 === c2) return;
     const a = S.board[r1][c1], b = S.board[r2][c2];
     if (!movable(a)) return;
+    if (a.gift) delete a.gift;
     if (!b) { S.board[r2][c2] = a; S.board[r1][c1] = null; }
     else if (b.station) { putInStation(r1, c1, r2, c2); return; }
     else { const m = mergeResult(a, b); if (!m) return; S.board[r2][c2] = m; S.board[r1][c1] = null; }
@@ -376,10 +407,10 @@
   const noticeEl = $('notice'), overlay = $('overlay');
   let flashTimer = null;
 
-  function flash(msg) {
+  function flash(msg, ms = 1800) {
     noticeEl.textContent = msg; noticeEl.hidden = false;
     clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => { noticeEl.hidden = true; }, 1800);
+    flashTimer = setTimeout(() => { noticeEl.hidden = true; }, ms);
   }
 
   function itemEl(cell) {
@@ -399,6 +430,7 @@
       const ing = DATA.isIngredient(cell.id);
       el.className = 'item ' + (ing ? 'ing' : 'dish');
       if (cell.big) el.classList.add('big');
+      if (cell.gift) el.classList.add('gift');
       el.dataset.id = cell.id;
       if (ing) {
         const ch = CHAINS[cell.id.slice(0, -1)];
@@ -423,7 +455,9 @@
   function render() {
     const t = now();
     $('energy').textContent = `⚡ ${S.energy}`;
-    $('stars').textContent = `★ ${S.stars}`;
+    const starsEl = $('stars');
+    if (starsEl.textContent && starsEl.textContent !== `★ ${S.stars}`) { starsEl.classList.remove('bump'); void starsEl.offsetWidth; starsEl.classList.add('bump'); }
+    starsEl.textContent = `★ ${S.stars}`;
     $('minutes').textContent = `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`;
 
     // Pedidos
@@ -434,14 +468,30 @@
       const el = document.createElement('div');
       el.className = 'order' + (o.done ? ' done' : '');
       el.dataset.order = i;
+      const itemsWrap = document.createElement('div'); itemsWrap.className = 'dishes';
+      if (o.customer) {
+        const who = document.createElement('div');
+        who.className = 'who';
+        who.innerHTML = `<span class="face">${o.customer.face}</span><span class="name">${o.customer.name}</span>`;
+        el.appendChild(who);
+      }
+      if (o.done) {
+        const th = document.createElement('div');
+        th.className = 'thanks' + (o.thanksAt && t - o.thanksAt < 1500 ? ' pop' : '');
+        th.textContent = '¡Gracias!';
+        el.appendChild(th);
+        ordersEl.appendChild(el);
+        return;
+      }
       let ready = !o.done;
       for (const x of o.items) {
         const ie = itemEl({ id: x.id });
         if (x.done) ie.classList.add('done');
         else if (onBoard.has(x.id)) ie.classList.add('have');
         else ready = false;
-        el.appendChild(ie);
+        itemsWrap.appendChild(ie);
       }
+      el.appendChild(itemsWrap);
       if (ready) el.classList.add('ready');
       ordersEl.appendChild(el);
     });
@@ -648,7 +698,7 @@
 
   // ---------- El local ----------
   $('local-btn').addEventListener('click', () => {
-    const { svg, caption } = LOCAL.render(decoCount());
+    const { svg, caption } = LOCAL.render(decoCount(), S.tables || 0);
     $('local-scene').innerHTML = svg;
     $('local-caption').textContent = caption;
     $('local').hidden = false;
@@ -696,8 +746,7 @@
   applyUnlocks(false);
   maybeReset();
   // Pedidos cerrados que hayan quedado de una versión anterior, o un número distinto de huecos: se rellenan.
-  S.orders = S.orders.filter(o => !o.done).slice(0, S.settings.orders);
-  while (S.orders.length < S.settings.orders) { const o = makeOrder(S.orders); if (!o) break; S.orders.push(o); }
+  if (!S.orders.length || S.orders.every(o => o.done) || S.orders.some(o => !o.customer)) S.orders = makeOrders(S.settings.orders);
   save();
   render();
   setInterval(() => { checkIdle(); maybeReset(); render(); }, 10000);
