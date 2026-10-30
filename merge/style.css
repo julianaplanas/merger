@@ -9,14 +9,13 @@
 #app {
   max-width: 480px;
   margin: 0 auto;
-  height: 100dvh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: 0 10px max(6px, env(safe-area-inset-bottom));
   gap: 6px;
-  overflow: hidden;
 }
-.board-wrap { flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; }
+.board-wrap { flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; position: relative; }
 #app .topbar { padding-left: 0; padding-right: 0; }
 
 .top {

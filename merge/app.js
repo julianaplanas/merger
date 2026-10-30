@@ -406,17 +406,23 @@
     return w;
   }
 
-  // Tamaño de celda: lo que quepa en ancho y en alto sin scroll.
+  // Tamaño de celda: lo que quepa en el hueco que deja el resto de la pantalla, en ancho y en alto.
+  const wrapEl = document.querySelector('.board-wrap');
+  let lastCell = 0;
   function fitBoard() {
-    const wrap = document.querySelector('.board-wrap');
-    const top = wrap.getBoundingClientRect().top;
-    const availH = window.innerHeight - top - 14;
-    const availW = wrap.clientWidth - 12;
+    const r = wrapEl.getBoundingClientRect();
+    const availH = Math.max(0, window.innerHeight - r.top - 10);
+    const availW = wrapEl.clientWidth - 12;
     const gap = 5;
     const cell = Math.floor(Math.min((availW - gap * (COLS - 1)) / COLS, (availH - gap * (ROWS - 1)) / ROWS));
-    document.documentElement.style.setProperty('--cellpx', Math.max(34, Math.min(64, cell)) + 'px');
+    const c = Math.max(30, Math.min(64, cell));
+    if (c !== lastCell) { lastCell = c; document.documentElement.style.setProperty('--cellpx', c + 'px'); }
   }
-  window.addEventListener('resize', () => { fitBoard(); });
+  window.addEventListener('resize', fitBoard);
+  window.addEventListener('orientationchange', () => setTimeout(fitBoard, 50));
+  if (window.ResizeObserver) new ResizeObserver(fitBoard).observe(document.body);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBoard);
+  window.addEventListener('load', () => { fitBoard(); setTimeout(fitBoard, 300); });
 
   function render() {
     const t = now();
