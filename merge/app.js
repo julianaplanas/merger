@@ -407,8 +407,21 @@
     return w;
   }
 
+  // Tamaño de celda: lo que quepa en ancho y en alto sin scroll.
+  function fitBoard() {
+    const wrap = document.querySelector('.board-wrap');
+    const top = wrap.getBoundingClientRect().top;
+    const availH = window.innerHeight - top - 14;
+    const availW = wrap.clientWidth - 12;
+    const gap = 5;
+    const cell = Math.floor(Math.min((availW - gap * (COLS - 1)) / COLS, (availH - gap * (ROWS - 1)) / ROWS));
+    document.documentElement.style.setProperty('--cell', Math.max(34, Math.min(64, cell)) + 'px');
+  }
+  window.addEventListener('resize', () => { fitBoard(); });
+
   function render() {
     const t = now();
+    fitBoard();
     $('energy').textContent = `⚡ ${S.energy}`;
     const starsEl = $('stars');
     if (starsEl.textContent && starsEl.textContent !== `★ ${S.stars}`) { starsEl.classList.remove('bump'); void starsEl.offsetWidth; starsEl.classList.add('bump'); }
