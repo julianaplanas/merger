@@ -163,7 +163,14 @@
 
   function studs(shape, color) {
     const [c1, c2] = COLORS[color];
-    return shape.map(([x, y]) => `<div class="cell" style="--x:${x};--y:${y};background:${c1};--dark:${c2}"><i></i></div>`).join('');
+    const has = (x, y) => shape.some(c => c[0] === x && c[1] === y);
+    return shape.map(([x, y]) => {
+      const r = 9;
+      const tl = !has(x - 1, y) && !has(x, y - 1) ? r : 0, tr = !has(x + 1, y) && !has(x, y - 1) ? r : 0;
+      const br = !has(x + 1, y) && !has(x, y + 1) ? r : 0, bl = !has(x - 1, y) && !has(x, y + 1) ? r : 0;
+      const cls = (has(x, y + 1) ? '' : ' bottom') + (has(x, y - 1) ? '' : ' top');
+      return `<div class="cell${cls}" style="--x:${x};--y:${y};background:${c1};--dark:${c2};border-radius:${tl}px ${tr}px ${br}px ${bl}px"><i></i></div>`;
+    }).join('');
   }
 
   function render() {
