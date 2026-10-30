@@ -6,85 +6,85 @@
   <meta name="theme-color" content="#f3ead9">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Bistró</title>
+  <title>Salón</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .hub { max-width: 480px; margin: 0 auto; padding: 0 16px max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+    .hero { text-align: center; padding: 18px 0 6px; }
+    .hero h1 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -.01em; }
+    .hero p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+    .games { display: flex; flex-direction: column; gap: 14px; }
+    .game {
+      display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center;
+      background: var(--paper); border-radius: 22px; padding: 14px; text-decoration: none; color: inherit;
+      box-shadow: var(--shadow); transition: transform .12s; position: relative; overflow: hidden;
+    }
+    .game:active { transform: scale(.98); }
+    .game .art { width: 96px; height: 96px; border-radius: 18px; display: grid; place-items: center; overflow: hidden; }
+    .game .art svg { width: 100%; height: 100%; }
+    .game h2 { margin: 0 0 2px; font-size: 19px; font-weight: 900; }
+    .game p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .game .meta { margin-top: 6px; font-size: 12px; color: var(--accent); font-weight: 800; }
+    .game .go { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--line); font-size: 26px; }
+    .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; }
+  </style>
 </head>
 <body>
-  <main id="app">
-    <header class="top">
-      <div class="stat" id="energy" title="Energía de hoy"></div>
-      <div class="stat time" id="minutes" title="Minutos jugados"></div>
-      <div class="stat" id="stars" title="Estrellas"></div>
-      <button class="icon-btn" id="book-btn" aria-label="Recetas">📖</button>
-      <button class="icon-btn" id="local-btn" aria-label="El local">🏠</button>
-      <button class="icon-btn" id="settings-btn" aria-label="Ajustes">⚙</button>
-    </header>
-
-    <section class="local-head">
-      <div class="local-strip" id="local-strip" title="El local"></div>
-      <div class="next"><div class="next-bar"><div class="next-fill" id="next-fill"></div></div><div class="next-text" id="next-text"></div></div>
-    </section>
-
-    <section class="orders" id="orders"></section>
-
-    <section class="board-wrap">
-      <div class="board" id="board"></div>
-      <div class="trash" id="trash">🗑</div>
-    </section>
-
-    <div class="notice" id="notice" hidden></div>
-
-    <div class="overlay" id="overlay" hidden>
-      <div class="card">
-        <h1 id="overlay-title"></h1>
-        <p id="overlay-text"></p>
-      </div>
+  <div class="topbar" id="topbar"></div>
+  <main class="hub">
+    <div class="hero">
+      <h1>Salón</h1>
+      <p>Tres juegos, cero anuncios.</p>
     </div>
-
-    <div class="overlay" id="chain" hidden>
-      <div class="card chain-card">
-        <h1 id="chain-title"></h1>
-        <div class="chain-body" id="chain-row"></div>
-        <p id="chain-text"></p>
-        <div class="row"><button type="button" id="chain-close">Cerrar</button></div>
-      </div>
-    </div>
-
-    <div class="overlay" id="unlock" hidden>
-      <div class="card unlock-card">
-        <p class="muted small">Desbloqueado</p>
-        <div class="unlock-art" id="unlock-art"></div>
-        <h1 id="unlock-title"></h1>
-        <p id="unlock-text"></p>
-        <div class="row"><button type="button" class="primary" id="unlock-close">Seguir</button></div>
-      </div>
-    </div>
-
-    <div class="overlay" id="local" hidden>
-      <div class="card local-card">
-        <h1>El local</h1>
-        <div class="scene" id="local-scene"></div>
-        <p id="local-caption"></p>
-        <div class="row"><button type="button" id="local-close">Cerrar</button></div>
-      </div>
-    </div>
-
-    <div class="overlay" id="settings" hidden>
-      <div class="card settings-card">
-        <h1>Ajustes</h1>
-        <p class="muted">Los cambios aplican desde el próximo reset (7:00).</p>
-        <form id="settings-form"></form>
-        <div class="row">
-          <button type="button" id="settings-cancel">Cerrar</button>
-          <button type="button" class="primary" id="settings-save">Guardar</button>
+    <div class="games">
+      <a class="game" href="merge/">
+        <div class="art" style="background:#f0d8b0">
+          <svg viewBox="0 0 96 96"><g><rect x="10" y="10" width="34" height="34" rx="9" fill="#d9a066"/><rect x="52" y="10" width="34" height="34" rx="9" fill="#7f9c6a"/><rect x="10" y="52" width="34" height="34" rx="9" fill="#8b5e3c"/><rect x="52" y="52" width="34" height="34" rx="9" fill="#c97b8e"/><text x="48" y="56" text-anchor="middle" font-size="26" font-family="Nunito, sans-serif" font-weight="900" fill="#fbf6ec">+</text></g></svg>
         </div>
-      </div>
+        <div>
+          <h2>Bistró</h2>
+          <p>Fusioná ingredientes, cociná recetas y atendé a tus clientes.</p>
+          <div class="meta" id="meta-merge"></div>
+        </div>
+        <div class="go">›</div>
+      </a>
+      <a class="game" href="sort/">
+        <div class="art" style="background:#dde6ec">
+          <svg viewBox="0 0 96 96"><g><rect x="14" y="18" width="18" height="62" rx="8" fill="#fbf6ec" stroke="#8fa7b8" stroke-width="3"/><rect x="17" y="60" width="12" height="17" rx="4" fill="#c9643f"/><rect x="17" y="44" width="12" height="15" fill="#7f9c6a"/><rect x="17" y="28" width="12" height="15" rx="4" fill="#e4b45a"/><rect x="39" y="18" width="18" height="62" rx="8" fill="#fbf6ec" stroke="#8fa7b8" stroke-width="3"/><rect x="42" y="60" width="12" height="17" rx="4" fill="#7f9c6a"/><rect x="42" y="44" width="12" height="15" fill="#c9643f"/><rect x="64" y="18" width="18" height="62" rx="8" fill="#fbf6ec" stroke="#8fa7b8" stroke-width="3"/><rect x="67" y="60" width="12" height="17" rx="4" fill="#e4b45a"/></g></svg>
+        </div>
+        <div>
+          <h2>Colores</h2>
+          <p>Ordená los bloques por color vertiendo de un tubo a otro. Niveles infinitos.</p>
+          <div class="meta" id="meta-sort"></div>
+        </div>
+        <div class="go">›</div>
+      </a>
+      <a class="game" href="diner/">
+        <div class="art" style="background:#f6dcd2">
+          <svg viewBox="0 0 96 96"><g><circle cx="48" cy="52" r="26" fill="#fbf6ec" stroke="#c9643f" stroke-width="4"/><circle cx="48" cy="52" r="15" fill="#e4b45a"/><circle cx="42" cy="48" r="4" fill="#d9553f"/><circle cx="54" cy="56" r="3" fill="#7f9c6a"/><rect x="14" y="30" width="5" height="44" rx="2" fill="#5d6b78"/><rect x="77" y="30" width="5" height="44" rx="2" fill="#5d6b78"/><path d="M12 30 h9 v10 q-4.5 4 -9 0 Z" fill="#5d6b78"/><rect x="74" y="26" width="11" height="14" rx="5" fill="#5d6b78"/></g></svg>
+        </div>
+        <div>
+          <h2>Servicio</h2>
+          <p>Sentá clientes, tomá pedidos, cociná y cobrá antes de que se impacienten.</p>
+          <div class="meta" id="meta-diner"></div>
+        </div>
+        <div class="go">›</div>
+      </a>
     </div>
+    <p class="foot">Sin anuncios, sin compras, sin notificaciones.</p>
   </main>
-  <script src="data.js"></script>
-  <script src="icons.js"></script>
-  <script src="local.js"></script>
-  <script src="app.js"></script>
+  <script src="common.js"></script>
+  <script>
+    HUB.mountTopbar(document.getElementById('topbar'), '', { back: false });
+    try {
+      const b = JSON.parse(localStorage.getItem('bistro.v2') || 'null');
+      if (b) document.getElementById('meta-merge').textContent = `★ ${b.stars || 0} · ${(b.discovered || []).length} recetas`;
+      const s = JSON.parse(localStorage.getItem('sort.v1') || 'null');
+      if (s) document.getElementById('meta-sort').textContent = `Nivel ${s.level || 1}`;
+      const d = JSON.parse(localStorage.getItem('diner.v1') || 'null');
+      if (d) document.getElementById('meta-diner').textContent = `Día ${d.day || 1} · ${d.coins || 0} monedas`;
+    } catch (e) {}
+  </script>
 </body>
 </html>

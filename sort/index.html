@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f3ead9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Colores</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="sort.css">
+</head>
+<body>
+  <div class="topbar" id="topbar"></div>
+  <main class="sort">
+    <div class="hud">
+      <div class="level" id="level"></div>
+      <div class="moves" id="moves"></div>
+      <div class="spacer"></div>
+      <button class="btn small-btn" id="undo">↶ Deshacer</button>
+      <button class="btn small-btn" id="restart">↻</button>
+    </div>
+    <div class="tubes" id="tubes"></div>
+    <div class="status" id="status"></div>
+    <div class="confetti" id="confetti"></div>
+
+    <div class="overlay" id="win" hidden>
+      <div class="card">
+        <p class="muted small">Completado</p>
+        <h1 id="win-title"></h1>
+        <p id="win-text"></p>
+        <div class="row"><button class="btn primary" id="win-next">Siguiente nivel</button></div>
+      </div>
+    </div>
+    <div class="overlay" id="lock" hidden>
+      <div class="card"><h1 id="lock-title"></h1><p id="lock-text"></p></div>
+    </div>
+  </main>
+  <script src="../common.js"></script>
+  <script>HUB.mountTopbar(document.getElementById('topbar'), 'Colores');</script>
+  <script src="sort.js"></script>
+</body>
+</html>

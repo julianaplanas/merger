@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f3ead9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Servicio</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="diner.css">
+</head>
+<body>
+  <div class="topbar" id="topbar"></div>
+  <main class="diner">
+    <div class="hud">
+      <div class="day" id="d-day"></div>
+      <div class="coins" id="d-coins"></div>
+      <div class="spacer"></div>
+      <div class="time" id="d-time"></div>
+      <button class="icon-btn" id="d-help" aria-label="Cómo se juega">?</button>
+    </div>
+    <div class="timebar"><i id="d-timebar"></i></div>
+
+    <section class="door">
+      <div class="queue" id="queue"></div>
+    </section>
+
+    <section class="room" id="room"></section>
+
+    <section class="service">
+      <div class="kitchen" id="kitchen"></div>
+      <div class="counter" id="counter"></div>
+    </section>
+
+    <div class="d-toast" id="d-toast" hidden></div>
+    <div class="fx" id="fx"></div>
+
+    <div class="overlay" id="start" hidden>
+      <div class="card start-card">
+        <p class="muted small" id="s-coins"></p>
+        <h1 id="s-day"></h1>
+        <p id="s-goal"></p>
+        <div class="upgrades" id="upgrades"></div>
+        <p class="muted small" id="s-prog"></p>
+        <div class="row"><button class="btn primary big" id="s-start">Abrir el restaurante</button></div>
+      </div>
+    </div>
+    <div class="overlay" id="end" hidden>
+      <div class="card">
+        <h1 id="end-title"></h1>
+        <div class="stars" id="end-stars"></div>
+        <p id="end-text"></p>
+        <div class="row"><button class="btn primary" id="end-next">Seguir</button></div>
+      </div>
+    </div>
+    <div class="overlay" id="help" hidden>
+      <div class="card help-card">
+        <h1>Cómo se juega</h1>
+        <ol>
+          <li><b>Puerta:</b> tocá un grupo y después una mesa libre (si solo hay una, se sientan solos).</li>
+          <li><b>Pedido:</b> cuando aparece la burbuja con los platos, tocá la mesa para tomar nota.</li>
+          <li><b>Cocina:</b> prepara los platos sola, de a uno por fogón.</li>
+          <li><b>Servir:</b> tocá el plato del mostrador (va a su mesa) o la mesa que espera.</li>
+          <li><b>Cobrar:</b> tocá la mesa cuando aparece la moneda. Servir rápido da propina.</li>
+        </ol>
+        <p class="muted small">Si la barra de paciencia se vacía, se van. El día dura 90 s.</p>
+        <div class="row"><button class="btn primary" id="help-close">Entendido</button></div>
+      </div>
+    </div>
+    <div class="overlay" id="lock" hidden>
+      <div class="card"><h1 id="lock-title"></h1><p id="lock-text"></p></div>
+    </div>
+  </main>
+  <script src="../common.js"></script>
+  <script>HUB.mountTopbar(document.getElementById('topbar'), 'Servicio');</script>
+  <script src="diner.js"></script>
+</body>
+</html>

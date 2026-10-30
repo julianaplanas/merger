@@ -1,0 +1,108 @@
+/* Base compartida por el hub y los tres juegos */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap');
+
+:root {
+  --bg: #f3ead9;
+  --bg2: #ead9bd;
+  --paper: #fbf6ec;
+  --ink: #3d3129;
+  --muted: #8a7a6c;
+  --line: #e2d6c2;
+  --accent: #c9643f;
+  --accent2: #e4b45a;
+  --green: #5f8f4a;
+  --shadow: 0 6px 18px rgba(61, 49, 41, .12), 0 1px 2px rgba(61, 49, 41, .08);
+  --shadow-sm: 0 2px 6px rgba(61, 49, 41, .10);
+  --r: 16px;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%;
+  background: radial-gradient(120% 80% at 50% 0%, #f8f1e3 0%, var(--bg) 55%, var(--bg2) 100%) fixed;
+  color: var(--ink);
+  font-family: 'Nunito', ui-rounded, system-ui, sans-serif;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; }
+
+/* Barra superior común */
+.topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: max(8px, env(safe-area-inset-top)) 12px 4px;
+  max-width: 480px; margin: 0 auto;
+  font-size: 14px;
+}
+.topbar .back {
+  width: 36px; height: 36px; border-radius: 50%; border: 0;
+  background: var(--paper); box-shadow: var(--shadow-sm); color: var(--ink);
+  font-size: 18px; cursor: pointer; display: grid; place-items: center;
+}
+.topbar .title { font-weight: 800; font-size: 17px; }
+.topbar .spacer { flex: 1; }
+.topbar .mins { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+.topbar .icon-btn {
+  background: none; border: 0; font-size: 20px; color: var(--muted); cursor: pointer; padding: 4px;
+}
+
+/* Tarjeta / overlay comunes */
+.overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(61, 49, 41, .45); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.overlay[hidden] { display: none; }
+.card {
+  background: var(--paper); border-radius: 22px; padding: 26px 22px;
+  max-width: 360px; width: 100%; text-align: center; box-shadow: var(--shadow);
+  animation: cardIn .25s ease-out;
+}
+@keyframes cardIn { from { transform: translateY(12px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.card h1 { margin: 0 0 8px; font-size: 22px; font-weight: 900; }
+.card p { margin: 0; color: var(--muted); line-height: 1.45; }
+.card .row { display: flex; gap: 8px; margin-top: 18px; justify-content: center; }
+.btn {
+  font: inherit; font-weight: 800; padding: 10px 20px; border-radius: 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  box-shadow: var(--shadow-sm); transition: transform .08s;
+}
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.gold { background: var(--accent2); border-color: var(--accent2); color: var(--ink); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+/* Ajustes del hub */
+.settings-card { text-align: left; }
+.settings-card label {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px;
+}
+.settings-card label span { flex: 1; }
+.settings-card input[type=number] {
+  width: 76px; text-align: right; font: inherit; border: 1px solid var(--line); border-radius: 10px;
+  padding: 6px 8px; background: #fff; color: var(--ink);
+}
+.switch { position: relative; width: 44px; height: 26px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch i {
+  position: absolute; inset: 0; border-radius: 13px; background: var(--line); transition: .2s; cursor: pointer;
+}
+.switch i::after {
+  content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+  border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.switch input:checked + i { background: var(--green); }
+.switch input:checked + i::after { transform: translateX(18px); }
+.settings-card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 16px 0 2px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px;
+  box-shadow: var(--shadow); z-index: 200; animation: toastIn .25s ease-out; pointer-events: none;
+}
+@keyframes toastIn { from { transform: translate(-50%, 10px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }

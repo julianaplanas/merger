@@ -1,21 +1,27 @@
-const CACHE = 'bistro-v14';
-const FILES = ['./', './index.html', './style.css', './app.js', './local.js', './icons.js', './data.js', './manifest.json', './icon.svg'];
+const CACHE = 'salon-v1';
+const FILES = [
+  './', './index.html', './common.css', './common.js', './manifest.json', './icon.svg',
+  './merge/', './merge/index.html', './merge/style.css', './merge/app.js', './merge/data.js', './merge/icons.js', './merge/local.js',
+  './sort/', './sort/index.html', './sort/sort.css', './sort/sort.js',
+  './diner/', './diner/index.html', './diner/diner.css', './diner/diner.js',
+];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(FILES.map(f => c.add(f)))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
-// Red primero, caché de respaldo: así una versión nueva llega al abrir la app con conexión.
+// Red primero, caché de respaldo.
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
     fetch(e.request).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return res;
-    }).catch(() => caches.match(e.request))
+    }).catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });

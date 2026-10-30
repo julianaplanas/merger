@@ -1,34 +1,10 @@
 :root {
-  --bg: #f3ead9;
-  --paper: #fbf6ec;
-  --ink: #3d3129;
-  --muted: #8a7a6c;
-  --line: #e2d6c2;
   --cell: #ece2cf;
-  --accent: #c9643f;
-
-  --pan: #d9a066;
-  --huerta: #7f9c6a;
-  --cafe: #8b5e3c;
-  --dulce: #c97b8e;
-
   --cols: 6;
   --rows: 8;
   --gap: 5px;
 }
 
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  height: 100%;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
-  -webkit-tap-highlight-color: transparent;
-  overscroll-behavior: none;
-  touch-action: manipulation;
-}
 
 #app {
   max-width: 480px;
@@ -36,15 +12,17 @@ html, body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
+  padding: 0 10px max(8px, env(safe-area-inset-bottom));
   gap: 8px;
 }
+#app .topbar { padding-left: 0; padding-right: 0; }
 
 .top {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 15px;
+  font-weight: 800;
 }
 .stat { font-variant-numeric: tabular-nums; }
 .stat.time { color: var(--muted); flex: 1; }
@@ -233,25 +211,6 @@ html, body {
   font-size: 14px;
 }
 
-/* Overlays */
-.overlay {
-  position: fixed; inset: 0;
-  background: rgba(61,49,41,.45);
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
-  z-index: 100;
-}
-.overlay[hidden] { display: none; }
-.card {
-  background: var(--paper);
-  border-radius: 20px;
-  padding: 28px 24px;
-  max-width: 360px;
-  width: 100%;
-  text-align: center;
-}
-.card h1 { margin: 0 0 8px; font-size: 24px; }
-.card p { margin: 0; color: var(--muted); line-height: 1.4; }
 .chain-card { text-align: left; max-height: 85vh; display: flex; flex-direction: column; }
 .chain-card h1 { text-align: center; font-size: 20px; }
 .chain-card .chain-body { overflow-y: auto; margin: 8px 0; -webkit-overflow-scrolling: touch; }

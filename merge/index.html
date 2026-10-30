@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f3ead9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Bistró</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <div class="topbar" id="topbar"></div>
+    <header class="top">
+      <div class="stat" id="energy" title="Energía de hoy"></div>
+      <div class="stat" id="stars" title="Estrellas"></div>
+      <div class="spacer" style="flex:1"></div>
+      <button class="icon-btn" id="book-btn" aria-label="Recetas">📖</button>
+      <button class="icon-btn" id="local-btn" aria-label="El local">🏠</button>
+      <button class="icon-btn" id="settings-btn" aria-label="Ajustes del Bistró">🎛</button>
+    </header>
+
+    <section class="local-head">
+      <div class="local-strip" id="local-strip" title="El local"></div>
+      <div class="next"><div class="next-bar"><div class="next-fill" id="next-fill"></div></div><div class="next-text" id="next-text"></div></div>
+    </section>
+
+    <section class="orders" id="orders"></section>
+
+    <section class="board-wrap">
+      <div class="board" id="board"></div>
+      <div class="trash" id="trash">🗑</div>
+    </section>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <div class="overlay" id="overlay" hidden>
+      <div class="card">
+        <h1 id="overlay-title"></h1>
+        <p id="overlay-text"></p>
+      </div>
+    </div>
+
+    <div class="overlay" id="chain" hidden>
+      <div class="card chain-card">
+        <h1 id="chain-title"></h1>
+        <div class="chain-body" id="chain-row"></div>
+        <p id="chain-text"></p>
+        <div class="row"><button type="button" id="chain-close">Cerrar</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="unlock" hidden>
+      <div class="card unlock-card">
+        <p class="muted small">Desbloqueado</p>
+        <div class="unlock-art" id="unlock-art"></div>
+        <h1 id="unlock-title"></h1>
+        <p id="unlock-text"></p>
+        <div class="row"><button type="button" class="primary" id="unlock-close">Seguir</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="local" hidden>
+      <div class="card local-card">
+        <h1>El local</h1>
+        <div class="scene" id="local-scene"></div>
+        <p id="local-caption"></p>
+        <div class="row"><button type="button" id="local-close">Cerrar</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="settings" hidden>
+      <div class="card settings-card">
+        <h1>Ajustes</h1>
+        <p class="muted small">Los cambios aplican desde el próximo reset (7:00).</p>
+        <form id="settings-form"></form>
+        <p class="muted small" style="margin-top:10px">Horario y límite de sesión: <a href="#" id="hub-limits">ajustes generales</a>.</p>
+        <div class="row">
+          <button type="button" id="settings-cancel">Cerrar</button>
+          <button type="button" class="primary" id="settings-save">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="../common.js"></script>
+  <script src="data.js"></script>
+  <script src="icons.js"></script>
+  <script src="local.js"></script>
+  <script>HUB.mountTopbar(document.getElementById('topbar'), 'Bistró');</script>
+  <script src="app.js"></script>
+</body>
+</html>

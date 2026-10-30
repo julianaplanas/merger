@@ -1,36 +1,30 @@
-# Bistró
+# Salón
 
-Merge game de cocina hecho a medida: sin publicidad, sin monetización, y pensado para jugarse solo en los ratos muertos del día laboral.
+Tres juegos casuales en una PWA, sin publicidad, sin compras ni notificaciones.
 
-- Tablero 6×8 (7×9 más adelante). 9 generadores de ingredientes (4 niveles cada uno), 6 estaciones (tabla, horno, sartén, licuadora, cafetera, heladera) y 72 recetas.
-- Las estaciones combinan ingredientes al instante, sin timers ni costo. Solo generar gasta energía.
-- Generadores, estaciones y decoración se desbloquean con estrellas en una lista única (`data.js`).
-- 120 de energía por día. Los pedidos llegan en mesas de 4 clientes con nombre y cara; entregar deja al cliente contento, completar la mesa da propina (+2 estrellas y un ingrediente de nivel 3 útil para la mesa siguiente) y trae la mesa siguiente. El costo está calibrado para que el día entero sea gastar toda la energía. Sin energía ni nada entregable, el día termina.
-- Abre de 8:00 a 19:00 de lunes a viernes. Reset a las 7:00.
-- Sesiones: aviso a los 8 min seguidos, cierre a los 12, pausa de 20.
-- Contador de minutos jugados hoy y esta semana, siempre visible.
-- Sin backend: todo en `localStorage`. Instalable como PWA.
+- **Bistró** (`/merge`): merge game de cocina. Ingredientes, estaciones, 72 recetas, mesas de clientes y un local que se decora.
+- **Colores** (`/sort`): ordenar bloques por color vertiendo entre tubos. Niveles infinitos, generados y verificados como resolubles.
+- **Servicio** (`/diner`): atender mesas. Sentar, tomar pedido, cocinar, servir, cobrar. Días de 90 s, estrellas y mejoras.
+
+Común a los tres: contador honesto de minutos jugados (hoy y esta semana) y, en Ajustes, un horario de juego y un límite de sesión **opcionales**, apagados por defecto.
 
 ## Correr en local
-
-Cualquier servidor estático sirve:
 
 ```
 python3 -m http.server 8000
 ```
 
-y abrir `http://localhost:8000`. En `localhost` el horario no aplica (modo desarrollo) y hay un helper en consola: `bistro.reset()` borra el estado y `bistro.cheat(n)` pone n estrellas y aplica los desbloqueos.
+y abrir `http://localhost:8000`. En localhost hay helpers en consola: `bistro.*`, `sort.*`, `diner.*` (cada uno con `reset()`).
 
 ## Publicar
 
-GitHub Pages desde la rama `main`, carpeta raíz. No hay build.
+GitHub Pages desde `main`, carpeta raíz. Sin build.
 
 ## Archivos
 
-- `index.html` — estructura
-- `style.css` — estilos (paleta cálida, una tonalidad por cadena)
-- `app.js` — toda la lógica: estado, reset, horario, sesiones, tablero, estaciones, pedidos, desbloqueos, ajustes
-- `data.js` — contenido: ingredientes, estaciones, recetas y lista de desbloqueos
-- `icons.js` — iconos de ingredientes y platos en SVG
-- `local.js` — la escena del local: 30 piezas en SVG que se desbloquean cada 15 estrellas
-- `sw.js` + `manifest.json` + `icon.svg` — PWA
+- `index.html` — el hub
+- `common.css`, `common.js` — estilos base, barra superior, minutos, ajustes y límites
+- `merge/` — Bistró (`app.js` lógica, `data.js` contenido, `icons.js`, `local.js`)
+- `sort/` — Colores (`sort.js` incluye generador y solver)
+- `diner/` — Servicio (`diner.js`)
+- `sw.js`, `manifest.json`, `icon.svg` — PWA

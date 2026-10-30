@@ -159,67 +159,12 @@
     save();
   }
 
-  function isOpen(t = now()) {
-    if (DEV) return true;
-    const d = new Date(t);
-    const h = d.getHours() + d.getMinutes() / 60;
-    return S.settings.days.includes(d.getDay()) && h >= S.settings.openHour && h < S.settings.closeHour;
-  }
-
-  function nextOpening(t = now()) {
-    const d = new Date(t);
-    for (let i = 0; i < 8; i++) {
-      const cand = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i, S.settings.openHour, 0, 0);
-      if (S.settings.days.includes(cand.getDay()) && cand.getTime() > t) return cand;
-    }
-    return null;
-  }
-
-  function fmtOpening(d) {
-    if (!d) return 'más adelante';
-    const t = now();
-    const sameDay = new Date(t).toDateString() === d.toDateString();
-    const tomorrow = new Date(t + 86400000).toDateString() === d.toDateString();
-    const hh = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-    if (sameDay) return `hoy a las ${hh}`;
-    if (tomorrow) return `mañana a las ${hh}`;
-    const days = ['el domingo', 'el lunes', 'el martes', 'el miércoles', 'el jueves', 'el viernes', 'el sábado'];
-    return `${days[d.getDay()]} a las ${hh}`;
-  }
-
-  // ---------- Sesiones y contador ----------
-  function endSession(t = now()) {
-    if (!S.session) return;
-    const ms = Math.min(t, S.session.lastTouch + S.settings.idleSec * 1000) - S.session.startedAt;
-    const day = gameDay(S.session.startedAt);
-    S.minutes[day] = (S.minutes[day] || 0) + ms / 60000;
-    S.session = null;
-    save();
-  }
-  function checkIdle() {
-    if (S.session && now() - S.session.lastTouch > S.settings.idleSec * 1000) endSession();
-  }
-  function touch() {
-    const t = now();
-    checkIdle();
-    if (!S.session) S.session = { startedAt: t, lastTouch: t };
-    S.session.lastTouch = t;
-    if ((t - S.session.startedAt) / 60000 >= S.settings.stopMin) {
-      S.pausedUntil = t + S.settings.pauseMin * 60000;
-      endSession(t);
-      return false;
-    }
-    return true;
-  }
-  function minutesToday() {
-    return (S.minutes[gameDay()] || 0) + (S.session ? (now() - S.session.startedAt) / 60000 : 0);
-  }
-  function minutesThisWeek() {
-    const t = now(), dow = (new Date(t).getDay() + 6) % 7;
-    let total = S.session ? (t - S.session.startedAt) / 60000 : 0;
-    for (let i = 0; i <= dow; i++) total += S.minutes[gameDay(t - i * 86400000)] || 0;
-    return total;
-  }
+  // Horario, sesiones y minutos: los lleva HUB (common.js). Aquí solo delegamos.
+  const isOpen = () => !HUB.lock() || HUB.lock()[0] !== 'Cerrado';
+  const nextOpening = (t) => HUB.nextOpening(t);
+  const fmtOpening = (d) => HUB.fmtOpening(d);
+  const touch = () => HUB.touch();
+  const endSession = () => HUB.endSession();
 
   // ---------- Pedidos ----------
   // Siempre hay `orders` pedidos abiertos; al entregar uno llega otro. El día termina cuando se acaba la energía.
@@ -468,7 +413,6 @@
     const starsEl = $('stars');
     if (starsEl.textContent && starsEl.textContent !== `★ ${S.stars}`) { starsEl.classList.remove('bump'); void starsEl.offsetWidth; starsEl.classList.add('bump'); }
     starsEl.textContent = `★ ${S.stars}`;
-    $('minutes').textContent = `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`;
 
     // Cabecera del local: escena recortada + próximo desbloqueo
     const strip = $('local-strip');
@@ -532,29 +476,22 @@
     }
 
     // Bloqueos
-    let lock = null;
-    if (!isOpen(t)) lock = ['Cerrado', `Abrimos ${fmtOpening(nextOpening(t))}.`];
-    else if (S.energy <= 0 && !anyDeliverable()) {
+    let lock = HUB.lock();
+    if (!lock && S.energy <= 0 && !anyDeliverable()) {
       S.dayDone = true;
       const nu = S.newUnlocks || [];
       const extra = nu.length ? ` Nuevo: ${nu.join(', ')}.` : '';
-      lock = ['Listo por hoy', `${S.delivered || 0} pedidos entregados, ${S.stars} estrellas en total.${extra} La energía vuelve ${fmtOpening(nextOpening(t))}.`];
+      lock = ['Listo por hoy', `${S.delivered || 0} pedidos entregados, ${S.stars} estrellas en total.${extra} La energía vuelve mañana a las ${S.settings.resetHour}:00.`];
     }
-    else if (S.pausedUntil > t) {
-      const m = Math.ceil((S.pausedUntil - t) / 60000);
-      lock = ['Pausa', `Llevabas ${S.settings.stopMin} minutos seguidos. El tablero vuelve en ${m} min.`];
-    }
-    if (lock && lock[0] === 'Listo por hoy' && S.session) endSession();
+    if (lock && lock[0] === 'Listo por hoy') endSession();
     app.classList.toggle('locked', !!lock);
     overlay.hidden = !lock;
     if (lock) { $('overlay-title').textContent = lock[0]; $('overlay-text').textContent = lock[1]; }
 
     if (!lock && pendingCards.length && $('unlock').hidden) showUnlockCard(pendingCards.shift());
 
-    if (!lock && S.session && (t - S.session.startedAt) / 60000 >= S.settings.warnMin) {
-      noticeEl.textContent = `Llevás ${Math.floor((t - S.session.startedAt) / 60000)} minutos seguidos`;
-      noticeEl.hidden = false;
-    }
+    const w = HUB.warn();
+    if (!lock && w) { noticeEl.textContent = w; noticeEl.hidden = false; }
   }
 
   // ---------- Drag & drop ----------
@@ -753,24 +690,16 @@
   $('local-close').addEventListener('click', () => { $('local').hidden = true; });
 
   // ---------- Ajustes ----------
-  const FIELDS = [
-    ['openHour', 'Hora de apertura'], ['closeHour', 'Hora de cierre'], ['days', 'Días (0=dom … 6=sáb)'],
-    ['energy', 'Energía diaria'], ['orders', 'Pedidos por día'],
-    ['warnMin', 'Aviso de sesión larga (min)'], ['stopMin', 'Cierre de sesión (min)'], ['pauseMin', 'Pausa entre sesiones (min)'],
-  ];
+  const FIELDS = [['energy', 'Energía diaria'], ['orders', 'Clientes por mesa']];
   $('settings-btn').addEventListener('click', () => {
     const cur = { ...S.settings, ...(S.pendingSettings || {}) };
     const form = $('settings-form');
     form.innerHTML = '';
     for (const [k, label] of FIELDS) {
       const l = document.createElement('label');
-      l.textContent = label;
-      const inp = document.createElement('input');
-      inp.name = k;
-      inp.value = Array.isArray(cur[k]) ? cur[k].join(',') : cur[k];
-      inp.inputMode = k === 'days' ? 'text' : 'numeric';
-      l.appendChild(inp);
-      form.appendChild(l);
+      l.innerHTML = `<span>${label}</span>`;
+      const inp = document.createElement('input'); inp.type = 'number'; inp.name = k; inp.value = cur[k];
+      l.appendChild(inp); form.appendChild(l);
     }
     $('settings').hidden = false;
   });
@@ -778,15 +707,14 @@
   $('settings-save').addEventListener('click', () => {
     const data = new FormData($('settings-form'));
     const p = {};
-    for (const [k] of FIELDS) {
-      const v = data.get(k).trim();
-      p[k] = k === 'days' ? v.split(',').map(Number).filter(n => n >= 0 && n <= 6) : Number(v);
-    }
+    for (const [k] of FIELDS) p[k] = Math.max(1, Number(data.get(k)));
     S.pendingSettings = p;
     save();
     $('settings').hidden = true;
-    flash('Guardado. Aplica desde el próximo reset.');
+    HUB.toast('Guardado. Aplica desde el próximo reset.');
   });
+  $('hub-limits').addEventListener('click', () => HUB.openSettings());
+  document.addEventListener('hub:settings', render);
 
   // ---------- Arranque ----------
   syncSize();
@@ -799,15 +727,9 @@
   setInterval(() => { checkIdle(); maybeReset(); render(); }, 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkIdle(); maybeReset(); render(); } });
 
-  // Service worker: cuando se activa una versión nueva, recargar una vez para no quedarse con la anterior en pantalla.
-  if ('serviceWorker' in navigator && !DEV) {
-    let hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) location.reload(); hadController = true; });
-    navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(() => {});
-  }
 
   if (DEV) window.bistro = {
-    S, save, render, generate, moveOrMerge, deliver, remove, touch, maybeReset, gameDay, isOpen, nextOpening,
+    S, save, render, generate, moveOrMerge, deliver, remove, touch, maybeReset, gameDay,
     applyUnlocks, makeable, availableDishes, tryCook, putInStation, emptyStation,
     reset: () => { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(OLD_KEY); location.reload(); },
     cheat: n => { S.stars = n; applyUnlocks(false); S.orders = makeOrders(S.settings.orders); save(); render(); },
