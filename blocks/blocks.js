@@ -230,6 +230,11 @@
       }
       if (!stepped) break;
     }
+    // empujón suave contra una salida: basta pasar un cuarto de celda más allá del borde
+    const fx = drag.ox + (e.clientX - drag.sx) / cellPx, fy = drag.oy + (e.clientY - drag.sy) / cellPx;
+    const { w: bw, h: bh } = bbox(p.shape);
+    const push = fy < p.y - 0.25 ? 'N' : fy > p.y + 0.25 && p.y + bh === L.h ? 'S' : fx < p.x - 0.25 ? 'W' : fx > p.x + 0.25 && p.x + bw === L.w ? 'E' : null;
+    if (push && exitFor(L, p, push)) { finishExit(p, push); return; }
     if (p.x !== drag.ox || p.y !== drag.oy) drag.moved = true;
     drag.el.style.setProperty('--x', p.x); drag.el.style.setProperty('--y', p.y);
   });
