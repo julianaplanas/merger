@@ -89,9 +89,9 @@ window.ART = (() => {
   // ---- Generador (Bistró): rueda dentada de color con el ingrediente base dentro ----
   function generator(color, innerSvg) {
     return `<svg viewBox="0 0 40 40" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 1 l3.2 3.4 4.5 -1.2 1.3 4.5 4.5 1.3 -1.2 4.5 3.4 3.2 -3.4 3.2 1.2 4.5 -4.5 1.3 -1.3 4.5 -4.5 -1.2 -3.2 3.4 -3.2 -3.4 -4.5 1.2 -1.3 -4.5 -4.5 -1.3 1.2 -4.5 -3.4 -3.2 3.4 -3.2 -1.2 -4.5 4.5 -1.3 1.3 -4.5 4.5 1.2 Z" fill="${color}"/>
-      <circle cx="20" cy="20" r="14" fill="${color}" stroke="rgba(255,255,255,.45)" stroke-width="1.5"/>
-      <circle cx="20" cy="20" r="11" fill="#fbf6ec"/>
+      <path d="M20 1 l3.2 3.4 4.5 -1.2 1.3 4.5 4.5 1.3 -1.2 4.5 3.4 3.2 -3.4 3.2 1.2 4.5 -4.5 1.3 -1.3 4.5 -4.5 -1.2 -3.2 3.4 -3.2 -3.4 -4.5 1.2 -1.3 -4.5 -4.5 -1.3 1.2 -4.5 -3.4 -3.2 3.4 -3.2 -1.2 -4.5 4.5 -1.3 1.3 -4.5 4.5 1.2 Z" fill="${color}" stroke="rgba(61,49,41,.35)" stroke-width="1.2" stroke-linejoin="round"/>
+      <circle cx="20" cy="20" r="14" fill="${color}" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+      <circle cx="20" cy="20" r="11" fill="#fbf6ec" stroke="rgba(61,49,41,.15)" stroke-width="1"/>
       <g transform="translate(9.5 9.5) scale(0.525)">${innerSvg.replace(/<\/?svg[^>]*>/g, '')}</g>
     </svg>`;
   }
