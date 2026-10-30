@@ -7,6 +7,7 @@
   'use strict';
 
   const KEY = 'diner.v1';
+  const COIN = '<i class="coin"></i>';
   const DAY_SECONDS = 90;
 
   const DISHES = [
@@ -236,7 +237,7 @@
   function render() {
     if (!G) return;
     $('d-day').textContent = `Día ${S.day}`;
-    $('d-coins').textContent = `🪙 ${G.coins} / ${G.goal}`;
+    $('d-coins').innerHTML = `${COIN}${G.coins} / ${G.goal}`;
     const left = Math.max(0, DAY_SECONDS - G.t);
     $('d-time').textContent = left > 0 ? `${Math.ceil(left)} s` : 'Cerrando…';
     $('d-timebar').style.width = (100 * left / DAY_SECONDS) + '%';
@@ -260,7 +261,7 @@
         else if (g.state === 'ordering') inner = faces + `<div class="bubble order">${g.orders.map(dishIcon).join(' ')}</div>` + bar(g.patience, patienceMax());
         else if (g.state === 'waiting') inner = faces + `<div class="bubble wait">${g.orders.map((d, k) => `<span class="${k < g.served ? 'got' : ''}">${dishIcon(d)}</span>`).join('')}</div>` + bar(g.patience, patienceMax());
         else if (g.state === 'eating') inner = faces + '<div class="bubble eat">😋</div>' + bar(g.timer, 4, 'neutral');
-        else if (g.state === 'paying') inner = faces + '<div class="bubble pay">🪙</div>';
+        else if (g.state === 'paying') inner = faces + `<div class="bubble pay">${COIN}</div>`;
       }
       return `<div class="${cls}" data-t="${i}"><div class="top">${inner}</div><div class="legs"></div></div>`;
     }).join('');
@@ -298,7 +299,7 @@
   function renderStart() {
     $('s-day').textContent = `Día ${S.day}`;
     $('s-goal').textContent = `Objetivo: ${goalFor(S.day)} monedas en ${DAY_SECONDS} segundos`;
-    $('s-coins').textContent = `🪙 ${S.coins}`;
+    $('s-coins').innerHTML = `${COIN}${S.coins}`;
     const list = $('upgrades'); list.innerHTML = '';
     for (const u of UPGRADES) {
       if (u.needs && !has(u.needs)) continue;
@@ -306,7 +307,7 @@
       const el = document.createElement('button');
       el.className = 'upg' + (owned ? ' owned' : S.coins >= u.cost ? ' can' : '');
       el.disabled = owned || S.coins < u.cost;
-      el.innerHTML = `<span class="ic">${u.icon}</span><span class="tx"><b>${u.name}</b><small>${u.desc}</small></span><span class="pr">${owned ? '✓' : '🪙 ' + u.cost}</span>`;
+      el.innerHTML = `<span class="ic">${u.icon}</span><span class="tx"><b>${u.name}</b><small>${u.desc}</small></span><span class="pr">${owned ? '✓' : COIN + u.cost}</span>`;
       el.addEventListener('click', () => { if (!HUB.touch()) return; S.coins -= u.cost; S.owned.push(u.id); save(); renderStart(); HUB.toast(`${u.name} comprado`); });
       list.appendChild(el);
     }
