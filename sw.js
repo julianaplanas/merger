@@ -1,6 +1,6 @@
-const CACHE = 'salon-v7';
+const CACHE = 'salon-v8';
 const FILES = [
-  './', './index.html', './common.css', './common.js', './manifest.json', './icon.svg',
+  './', './index.html', './common.css', './common.js', './art.js', './manifest.json', './icon.svg',
   './merge/', './merge/index.html', './merge/style.css', './merge/app.js', './merge/data.js', './merge/icons.js', './merge/local.js',
   './sort/', './sort/index.html', './sort/sort.css', './sort/sort.js',
   './blocks/', './blocks/index.html', './blocks/blocks.css', './blocks/blocks.js',

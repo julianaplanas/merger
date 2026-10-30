@@ -186,7 +186,7 @@
   function makeCustomer(orders) {
     const used = new Set(orders.map(o => o.customer && o.customer.name));
     const free = NAMES.filter(n => !used.has(n));
-    return { name: free[Math.floor(Math.random() * free.length)], face: FACES[Math.floor(Math.random() * FACES.length)] };
+    return { name: free[Math.floor(Math.random() * free.length)], seed: Math.floor(Math.random() * 100000) };
   }
 
   function makeOrder(orders) {
@@ -372,14 +372,13 @@
     const el = document.createElement('div');
     if (cell.gen) {
       el.className = 'item gen';
-      el.style.background = CHAINS[cell.gen].color;
-      el.textContent = CHAINS[cell.gen].icon;
+      el.innerHTML = ART.generator(CHAINS[cell.gen].color, ICONS.svg(cell.gen + '1'));
       if (S.energy <= 0) el.classList.add('empty');
     } else if (cell.station) {
       const st = STATIONS[cell.station];
       el.className = 'item station';
       el.style.background = st.color;
-      el.innerHTML = `<span class="st-icon">${st.icon}</span><span class="st-slots">${cell.slots.map(s => `<i class="${s ? 'full' : ''}"></i>`).join('')}</span>`;
+      el.innerHTML = `<span class="st-icon">${ART.station(cell.station)}</span><span class="st-slots">${cell.slots.map(s => `<i class="${s ? 'full' : ''}"></i>`).join('')}</span>`;
       el.title = st.name;
     } else {
       const ing = DATA.isIngredient(cell.id);
@@ -422,10 +421,10 @@
   function render() {
     const t = now();
     fitBoard();
-    $('energy').textContent = `⚡ ${S.energy}`;
+    $('energy').innerHTML = `${ART.icon('energy', 18)} ${S.energy}`;
     const starsEl = $('stars');
-    if (starsEl.textContent && starsEl.textContent !== `★ ${S.stars}`) { starsEl.classList.remove('bump'); void starsEl.offsetWidth; starsEl.classList.add('bump'); }
-    starsEl.textContent = `★ ${S.stars}`;
+    if (starsEl.dataset.v && starsEl.dataset.v !== String(S.stars)) { starsEl.classList.remove('bump'); void starsEl.offsetWidth; starsEl.classList.add('bump'); }
+    starsEl.innerHTML = `${ART.icon('star', 18)} ${S.stars}`; starsEl.dataset.v = S.stars;
 
     // Cabecera del local: escena recortada + próximo desbloqueo
     const strip = $('local-strip');
@@ -449,7 +448,7 @@
       if (o.customer) {
         const who = document.createElement('div');
         who.className = 'who';
-        who.innerHTML = `<span class="face">${o.customer.face}</span><span class="name">${o.customer.name}</span>`;
+        who.innerHTML = `<span class="face">${ART.avatar(o.customer.seed ?? 1, o.done ? 'happy' : 'neutral', 26)}</span><span class="name">${o.customer.name}</span>`;
         el.appendChild(who);
       }
       if (o.done) {
@@ -619,7 +618,7 @@
       return line;
     }
     const st = STATIONS[r.station];
-    return line + `<div class="tree-station" style="--d:${depth + 1}">${st.icon} ${st.name}</div>` + r.in.map(i => treeHtml(i, have, depth + 1)).join('');
+    return line + `<div class="tree-station" style="--d:${depth + 1}">${ART.station(r.station, 16)} ${st.name}</div>` + r.in.map(i => treeHtml(i, have, depth + 1)).join('');
   }
 
   function showRecipe(id) {
@@ -655,7 +654,7 @@
     $('chain-title').textContent = `Recetas · ${S.discovered.length} de ${avail.length}`;
     $('chain-row').innerHTML = sts.map(stId => {
       const list = DATA.recipesAt(stId).filter(r => makeable(r.out));
-      return `<h3 class="book-h">${STATIONS[stId].icon} ${STATIONS[stId].name}</h3>` + list.map(r =>
+      return `<h3 class="book-h">${ART.station(stId, 18)} ${STATIONS[stId].name}</h3>` + list.map(r =>
         `<div class="book-row ${S.discovered.includes(r.out) ? '' : 'undiscovered'}" data-dish="${r.out}">${r.in.map(i => itemEl({ id: i }).outerHTML).join('<span class="plus">+</span>')}<span class="arrow">›</span>${itemEl({ id: r.out }).outerHTML}<span class="tree-name">${S.discovered.includes(r.out) ? DISHES[r.out].name : '?'}</span></div>`
       ).join('');
     }).join('');
@@ -678,12 +677,12 @@
     } else if (u.kind === 'gen') {
       const ch = CHAINS[u.id];
       title = `Generador de ${ch.name.toLowerCase()}`; text = `Produce ${ch.items.map(x => x.toLowerCase()).join(' → ')}. Ya está en el tablero.`;
-      art = `<div class="item gen" style="position:static;width:72px;height:72px;font-size:36px;background:${ch.color}">${ch.icon}</div>`;
+      art = `<div class="item gen" style="position:static;width:72px;height:72px">${ART.generator(ch.color, ICONS.svg(u.id + '1'))}</div>`;
     } else if (u.kind === 'station') {
       const st = STATIONS[u.id];
       const n = DATA.recipesAt(u.id).length;
       title = st.name; text = `Nueva estación con ${n} recetas por descubrir. Ya está en el tablero.`;
-      art = `<div class="item station" style="position:static;width:72px;height:72px;background:${st.color}"><span class="st-icon" style="font-size:36px">${st.icon}</span></div>`;
+      art = `<div class="item station" style="position:static;width:72px;height:72px;background:${st.color}"><span class="st-icon">${ART.station(u.id, 48)}</span></div>`;
     } else { title = 'Tablero más grande'; text = 'Una fila y una columna más.'; art = '<div style="font-size:48px">▦</div>'; }
     $('unlock-title').textContent = title;
     $('unlock-art').innerHTML = art;

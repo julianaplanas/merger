@@ -25,6 +25,7 @@ GitHub Pages desde `main`, carpeta raíz. Sin build.
 
 - `index.html` — el hub
 - `common.css`, `common.js` — estilos base, barra superior, minutos, ajustes y límites
+- `art.js` — arte compartido en SVG: avatares de clientes, estaciones, iconos
 - `merge/` — Bistró (`app.js` lógica, `data.js` contenido, `icons.js`, `local.js`)
 - `blocks/` — Bloques (`blocks.js` incluye generador con solución registrada)
 - `sort/` — Colores (`sort.js` incluye generador y solver)

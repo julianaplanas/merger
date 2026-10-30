@@ -100,12 +100,12 @@ window.HUB = (() => {
   function minsLabel() { return `${Math.round(minutesToday())} min hoy · ${Math.round(minutesThisWeek())} esta semana`; }
   function mountTopbar(el, title, opts = {}) {
     el.innerHTML = `
-      ${opts.back === false ? '' : '<button class="back" id="hub-back" aria-label="Volver">‹</button>'}
+      ${opts.back === false ? '' : `<button class="back" id="hub-back" aria-label="Volver">${window.ART ? ART.icon('back', 22) : '‹'}</button>`}
       <div class="title">${title}</div>
       <div class="spacer"></div>
       <div class="mins" id="hub-mins"></div>
       ${opts.extra || ''}
-      <button class="icon-btn" id="hub-settings" aria-label="Ajustes">⚙</button>`;
+      <button class="icon-btn" id="hub-settings" aria-label="Ajustes">${window.ART ? ART.icon('gear', 22) : '⚙'}</button>`;
     const back = el.querySelector('#hub-back');
     if (back) back.addEventListener('click', () => { endSession(); location.href = opts.backHref || '../'; });
     el.querySelector('#hub-settings').addEventListener('click', openSettings);

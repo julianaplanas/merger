@@ -18,7 +18,7 @@
       <div class="coins" id="d-coins"></div>
       <div class="spacer"></div>
       <div class="time" id="d-time"></div>
-      <button class="icon-btn" id="d-help" aria-label="Cómo se juega">?</button>
+      <button class="icon-btn" id="d-help" aria-label="Cómo se juega"></button>
     </div>
     <div class="timebar"><i id="d-timebar"></i></div>
 
@@ -72,8 +72,11 @@
       <div class="card"><h1 id="lock-title"></h1><p id="lock-text"></p></div>
     </div>
   </main>
+  <script src="../art.js"></script>
   <script src="../common.js"></script>
-  <script>HUB.mountTopbar(document.getElementById('topbar'), 'Servicio');</script>
+  <script src="../merge/data.js"></script>
+  <script src="../merge/icons.js"></script>
+  <script>HUB.mountTopbar(document.getElementById('topbar'), 'Servicio'); document.getElementById('d-help').innerHTML = ART.icon('help', 26);</script>
   <script src="diner.js"></script>
 </body>
 </html>

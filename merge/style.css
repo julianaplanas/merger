@@ -26,7 +26,7 @@
   font-size: 15px;
   font-weight: 800;
 }
-.stat { font-variant-numeric: tabular-nums; }
+.stat { font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; }
 .stat.time { color: var(--muted); flex: 1; }
 .icon-btn {
   background: none; border: 0; font-size: 20px; color: var(--muted);
@@ -73,7 +73,7 @@
   transition: background .15s, transform .15s;
 }
 .order .who { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); max-width: 100%; }
-.order .who .face { font-size: 14px; }
+.order .who .face { line-height: 0; } .order .who .face svg { width: 26px; height: 26px; }
 .order .who .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .order .dishes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .order.done { background: #eef3e6; border-color: #cfdcc1; }
@@ -145,8 +145,10 @@
 .item.gen {
   border-radius: 50%;
   box-shadow: none;
+  background: none !important;
   color: #fff;
   font-size: 26px;
+  border: 0 !important;
   border: 3px dashed rgba(255,255,255,.7);
   font-size: 22px;
   cursor: pointer;
@@ -157,13 +159,13 @@
   flex-direction: column; gap: 2px;
   cursor: pointer;
 }
-.item.station .st-icon { font-size: 26px; line-height: 1; }
+.item.station .st-icon { line-height: 0; } .item.station .st-icon svg { width: 30px; height: 30px; }
 .item.station .st-slots { display: flex; gap: 3px; }
 .item.station .st-slots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.35); }
 .item.station .st-slots i.full { background: #fff; }
 .item.dish.big::after { content: "×2"; position: absolute; bottom: 2px; right: 4px; font-size: 9px; font-weight: 700; color: var(--ink); opacity: .7; }
 .cell.over .item.station { filter: brightness(1.15); }
-.item.gen.empty { filter: saturate(.3) brightness(1.1); }
+.item.gen.empty { filter: saturate(.2) brightness(1.1); opacity: .7; }
 .item.dragging {
   position: fixed;
   inset: auto;
@@ -201,10 +203,10 @@
   border-radius: 999px;
   width: 56px; height: 56px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px;
   opacity: 0;
   transition: opacity .15s, background .15s;
   pointer-events: none;
+  line-height: 0;
 }
 .trash.show { opacity: 1; }
 .trash.over { background: #f3d4c9; }
@@ -227,11 +229,11 @@
 .tree-name { font-size: 14px; }
 .tree-name b { color: #5f8f4a; }
 .tree-cost { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
-.tree-station { font-size: 13px; color: var(--muted); padding-top: 0; }
+.tree-station { font-size: 13px; color: var(--muted); padding-top: 0; display: flex; align-items: center; gap: 4px; }
 .tree-chain .item { width: 26px; height: 26px; opacity: .7; }
 .tree-chain .item .lvl, .tree-chain .item svg + .lvl { display: none; }
 .arrow, .plus { color: var(--muted); font-size: 13px; }
-.book-h { font-size: 14px; margin: 12px 0 4px; color: var(--muted); font-weight: 600; }
+.book-h { font-size: 14px; margin: 12px 0 4px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .book-row { border-bottom: 1px solid var(--line); cursor: pointer; }
 .book-row.undiscovered .item.dish { filter: grayscale(1) opacity(.4); }
 .book-row .tree-name { margin-left: 2px; }

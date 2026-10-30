@@ -18,9 +18,9 @@
       <div class="stat" id="energy" title="Energía de hoy"></div>
       <div class="stat" id="stars" title="Estrellas"></div>
       <div class="spacer" style="flex:1"></div>
-      <button class="icon-btn" id="book-btn" aria-label="Recetas">📖</button>
-      <button class="icon-btn" id="local-btn" aria-label="El local">🏠</button>
-      <button class="icon-btn" id="settings-btn" aria-label="Ajustes del Bistró">🎛</button>
+      <button class="icon-btn" id="book-btn" aria-label="Recetas"></button>
+      <button class="icon-btn" id="local-btn" aria-label="El local"></button>
+      <button class="icon-btn" id="settings-btn" aria-label="Ajustes del Bistró"></button>
     </header>
 
     <section class="local-head">
@@ -32,7 +32,7 @@
 
     <section class="board-wrap">
       <div class="board" id="board"></div>
-      <div class="trash" id="trash">🗑</div>
+      <div class="trash" id="trash"></div>
     </section>
 
     <div class="notice" id="notice" hidden></div>
@@ -85,11 +85,18 @@
       </div>
     </div>
   </main>
+  <script src="../art.js"></script>
   <script src="../common.js"></script>
   <script src="data.js"></script>
   <script src="icons.js"></script>
   <script src="local.js"></script>
-  <script>HUB.mountTopbar(document.getElementById('topbar'), 'Bistró');</script>
+  <script>
+    HUB.mountTopbar(document.getElementById('topbar'), 'Bistró');
+    document.getElementById('book-btn').innerHTML = ART.icon('book', 24);
+    document.getElementById('local-btn').innerHTML = ART.icon('house', 24);
+    document.getElementById('settings-btn').innerHTML = ART.icon('sliders', 24);
+    document.getElementById('trash').innerHTML = ART.icon('trash', 28);
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

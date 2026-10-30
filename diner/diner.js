@@ -11,24 +11,23 @@
   const DAY_SECONDS = 90;
 
   const DISHES = [
-    { id: 'cafe', name: 'Café', icon: '☕', time: 3, price: 4 },
-    { id: 'tostada', name: 'Tostada', icon: '🍞', time: 4, price: 5 },
-    { id: 'ensalada', name: 'Ensalada', icon: '🥗', time: 5, price: 7 },
-    { id: 'pizza', name: 'Pizza', icon: '🍕', time: 7, price: 10 },
-    { id: 'pasta', name: 'Pasta', icon: '🍝', time: 8, price: 11 },
-    { id: 'tarta', name: 'Tarta', icon: '🍰', time: 5, price: 8 },
+    { id: 'cafe', name: 'Café', art: 'cortado', time: 3, price: 4 },
+    { id: 'tostada', name: 'Tostada', art: 'tostada', time: 4, price: 5 },
+    { id: 'ensalada', name: 'Ensalada', art: 'ensaladaverde', time: 5, price: 7 },
+    { id: 'pizza', name: 'Pizza', art: 'pizza', time: 7, price: 10 },
+    { id: 'pasta', name: 'Pasta', art: 'pasta', time: 8, price: 11 },
+    { id: 'tarta', name: 'Tarta', art: 'tartafresa', time: 5, price: 8 },
   ];
-  const FACES = ['🙂', '😊', '😄', '🧐', '😌', '🤓', '😎', '🥰', '😇', '🙃', '🤗', '😋', '👵', '👴', '👩', '👨', '🧑', '👧', '👦'];
 
   const UPGRADES = [
-    { id: 'table5', name: 'Quinta mesa', desc: 'Una mesa más para sentar gente.', cost: 120, icon: '🪑' },
-    { id: 'table6', name: 'Sexta mesa', desc: 'Y otra más.', cost: 260, icon: '🪑', needs: 'table5' },
-    { id: 'stove2', name: 'Segundo fogón', desc: 'La cocina prepara dos platos a la vez.', cost: 150, icon: '🔥' },
-    { id: 'stove3', name: 'Tercer fogón', desc: 'Tres platos a la vez.', cost: 320, icon: '🔥', needs: 'stove2' },
-    { id: 'fast', name: 'Cocina rápida', desc: 'Los platos se preparan un 25% más rápido.', cost: 200, icon: '⚡' },
-    { id: 'music', name: 'Música', desc: 'Los clientes esperan un 30% más antes de irse.', cost: 180, icon: '🎵' },
-    { id: 'menu', name: 'Carta nueva', desc: 'Desbloquea pizza, pasta y tarta (más caras).', cost: 100, icon: '📜' },
-    { id: 'tips', name: 'Servicio de lujo', desc: 'Propina doble si servís con la paciencia por encima de la mitad.', cost: 350, icon: '✨' },
+    { id: 'table5', name: 'Quinta mesa', desc: 'Una mesa más para sentar gente.', cost: 120, icon: 'table' },
+    { id: 'table6', name: 'Sexta mesa', desc: 'Y otra más.', cost: 260, icon: 'table', needs: 'table5' },
+    { id: 'stove2', name: 'Segundo fogón', desc: 'La cocina prepara dos platos a la vez.', cost: 150, icon: 'flame' },
+    { id: 'stove3', name: 'Tercer fogón', desc: 'Tres platos a la vez.', cost: 320, icon: 'flame', needs: 'stove2' },
+    { id: 'fast', name: 'Cocina rápida', desc: 'Los platos se preparan un 25% más rápido.', cost: 200, icon: 'energy' },
+    { id: 'music', name: 'Música', desc: 'Los clientes esperan un 30% más antes de irse.', cost: 180, icon: 'music' },
+    { id: 'menu', name: 'Carta nueva', desc: 'Desbloquea pizza, pasta y tarta (más caras).', cost: 100, icon: 'book' },
+    { id: 'tips', name: 'Servicio de lujo', desc: 'Propina doble si servís con la paciencia por encima de la mitad.', cost: 350, icon: 'star' },
   ];
 
   // ---------- Estado persistente ----------
@@ -65,7 +64,7 @@
   function spawnGroup() {
     const p2 = Math.min(0.75, 0.35 + S.day * 0.04);           // grupos de 2 más frecuentes con los días
     const size = Math.random() < p2 ? 2 : 1;
-    const faces = Array.from({ length: size }, () => FACES[Math.floor(Math.random() * FACES.length)]);
+    const faces = Array.from({ length: size }, () => Math.floor(Math.random() * 100000)); // semillas de avatar
     const m = menu();
     const orders = faces.map(() => m[Math.floor(Math.random() * m.length)].id);
     G.queue.push({ id: G.nextId++, faces, orders, patience: patienceMax(), state: 'waiting' });
@@ -118,7 +117,7 @@
       G.tables[idx].group = null;
     }
     G.lost++;
-    toast('Un cliente se fue 😤');
+    toast('Un cliente se fue sin comer');
   }
 
   // ---------- Bucle ----------
@@ -181,7 +180,7 @@
     if (stars > 0) S.day++;
     save();
     $('end-title').textContent = stars ? `Día ${S.day - 1} cerrado` : 'Día flojo';
-    $('end-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+    $('end-stars').innerHTML = Array.from({ length: 3 }, (_, i) => `<span class="${i < stars ? 'on' : 'off'}">${ART.icon('star', 34)}</span>`).join('');
     $('end-text').textContent = `${G.coins} monedas de ${G.goal} de objetivo · ${G.served} platos servidos · ${G.lost} clientes perdidos.` + (stars ? '' : ' Repetí el día; podés comprar mejoras antes.');
     $('end').hidden = false;
     HUB.endSession();
@@ -209,7 +208,7 @@
       toast('Mesa ocupada'); return;
     }
     if (!t.group) { G.selected = null; return; }
-    if (t.group.state === 'ordering') { takeOrder(i); fx('📝', i); return; }
+    if (t.group.state === 'ordering') { takeOrder(i); fx('✓', i, 'good'); return; }
     if (t.group.state === 'paying') { collect(i); return; }
     if (t.group.state === 'waiting') {
       // ¿hay un plato suyo en el mostrador? servirlo directo
@@ -232,7 +231,15 @@
     const col = pct > 50 ? 'var(--green)' : pct > 25 ? 'var(--accent2)' : 'var(--accent)';
     return `<div class="bar ${cls}"><i style="width:${pct}%;background:${col}"></i></div>`;
   }
-  const dishIcon = id => DISHES.find(d => d.id === id).icon;
+  const dishIcon = id => { const d = DISHES.find(x => x.id === id); return d.art === 'pasta' ? ART.icon('pasta', 28) : ICONS.svg(d.art); };
+  const faces = (g, mood) => g.faces.map(f => ART.avatar(f, mood, 30)).join('');
+  function moodOf(g) {
+    if (g.state === 'eating') return 'eating';
+    if (g.state === 'paying') return 'happy';
+    if (g.state === 'seated') return 'neutral';
+    const p = g.patience / patienceMax();
+    return p > 0.5 ? 'neutral' : p > 0.25 ? 'worried' : 'angry';
+  }
 
   function render() {
     if (!G) return;
@@ -245,7 +252,7 @@
     // cola
     queueEl.innerHTML = G.queue.map((g, i) => `
       <div class="guest ${G.selected && G.selected.kind === 'queue' && G.selected.idx === i ? 'selected' : ''}" data-q="${i}">
-        <div class="faces">${g.faces.join('')}</div>${bar(g.patience, patienceMax())}
+        <div class="faces">${faces(g, moodOf(g))}</div>${bar(g.patience, patienceMax())}
       </div>`).join('') || '<div class="empty-hint">Puerta</div>';
 
     // mesas
@@ -256,12 +263,12 @@
       if (!g) { cls += ' free' + (G.selected && G.selected.kind === 'queue' ? ' target' : ''); inner = '<div class="plate-empty"></div>'; }
       else {
         cls += ' ' + g.state;
-        const faces = `<div class="faces">${g.faces.join('')}</div>`;
-        if (g.state === 'seated') inner = faces + '<div class="bubble think">…</div>';
-        else if (g.state === 'ordering') inner = faces + `<div class="bubble order">${g.orders.map(dishIcon).join(' ')}</div>` + bar(g.patience, patienceMax());
-        else if (g.state === 'waiting') inner = faces + `<div class="bubble wait">${g.orders.map((d, k) => `<span class="${k < g.served ? 'got' : ''}">${dishIcon(d)}</span>`).join('')}</div>` + bar(g.patience, patienceMax());
-        else if (g.state === 'eating') inner = faces + '<div class="bubble eat">😋</div>' + bar(g.timer, 4, 'neutral');
-        else if (g.state === 'paying') inner = faces + `<div class="bubble pay">${COIN}</div>`;
+        const fc = `<div class="faces">${faces(g, moodOf(g))}</div>`;
+        if (g.state === 'seated') inner = fc + '<div class="bubble think">…</div>';
+        else if (g.state === 'ordering') inner = fc + `<div class="bubble order">${g.orders.map(dishIcon).join('')}</div>` + bar(g.patience, patienceMax());
+        else if (g.state === 'waiting') inner = fc + `<div class="bubble wait">${g.orders.map((d, k) => `<span class="${k < g.served ? 'got' : ''}">${dishIcon(d)}</span>`).join('')}</div>` + bar(g.patience, patienceMax());
+        else if (g.state === 'eating') inner = fc + `<div class="bubble eat">${g.orders.map(dishIcon).join('')}</div>` + bar(g.timer, 4, 'neutral');
+        else if (g.state === 'paying') inner = fc + `<div class="bubble pay">${COIN}</div>`;
       }
       return `<div class="${cls}" data-t="${i}"><div class="top">${inner}</div><div class="legs"></div></div>`;
     }).join('');
@@ -271,7 +278,7 @@
     const active = G.kitchen.slice(0, sv);
     kitchenEl.innerHTML = Array.from({ length: sv }, (_, i) => {
       const k = active[i];
-      return `<div class="stove ${k ? 'busy' : ''}">${k ? `<span class="dish">${dishIcon(k.dish)}</span><div class="ring" style="--p:${Math.round(k.progress * 100)}"></div><span class="tnum">${k.table + 1}</span>` : '<span class="dish dim">🔥</span>'}</div>`;
+      return `<div class="stove ${k ? 'busy' : ''}">${k ? `<span class="dish">${dishIcon(k.dish)}</span><div class="ring" style="--p:${Math.round(k.progress * 100)}"></div><span class="tnum">${k.table + 1}</span>` : `<span class="dish dim">${ART.icon('flame', 26)}</span>`}</div>`;
     }).join('') + (G.kitchen.length > sv ? `<div class="pending">+${G.kitchen.length - sv} en espera</div>` : '');
 
     // mostrador
@@ -307,7 +314,7 @@
       const el = document.createElement('button');
       el.className = 'upg' + (owned ? ' owned' : S.coins >= u.cost ? ' can' : '');
       el.disabled = owned || S.coins < u.cost;
-      el.innerHTML = `<span class="ic">${u.icon}</span><span class="tx"><b>${u.name}</b><small>${u.desc}</small></span><span class="pr">${owned ? '✓' : COIN + u.cost}</span>`;
+      el.innerHTML = `<span class="ic">${ART.icon(u.icon, 26)}</span><span class="tx"><b>${u.name}</b><small>${u.desc}</small></span><span class="pr">${owned ? '✓' : COIN + u.cost}</span>`;
       el.addEventListener('click', () => { if (!HUB.touch()) return; S.coins -= u.cost; S.owned.push(u.id); save(); renderStart(); HUB.toast(`${u.name} comprado`); });
       list.appendChild(el);
     }
