@@ -415,7 +415,7 @@
     const availW = wrap.clientWidth - 12;
     const gap = 5;
     const cell = Math.floor(Math.min((availW - gap * (COLS - 1)) / COLS, (availH - gap * (ROWS - 1)) / ROWS));
-    document.documentElement.style.setProperty('--cell', Math.max(34, Math.min(64, cell)) + 'px');
+    document.documentElement.style.setProperty('--cellpx', Math.max(34, Math.min(64, cell)) + 'px');
   }
   window.addEventListener('resize', () => { fitBoard(); });
 

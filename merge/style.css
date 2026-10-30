@@ -103,7 +103,7 @@
 .board-wrap { position: relative; }
 .board {
   display: grid;
-  grid-template-columns: repeat(var(--cols), var(--cell, 1fr));
+  grid-template-columns: repeat(var(--cols), var(--cellpx, 1fr));
   width: max-content; max-width: 100%; margin: 0 auto;
   gap: var(--gap);
   background: var(--paper);
@@ -115,7 +115,7 @@
 }
 .cell {
   aspect-ratio: 1;
-  width: var(--cell, auto);
+  width: var(--cellpx, auto);
   background: var(--cell);
   border-radius: 10px;
   position: relative;
