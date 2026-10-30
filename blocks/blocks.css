@@ -1,0 +1,71 @@
+.blocks { max-width: 480px; margin: 0 auto; padding: 0 12px max(12px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; user-select: none; }
+.hud { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.hud .level { font-weight: 900; font-size: 18px; }
+.hud .moves { color: var(--muted); font-variant-numeric: tabular-nums; }
+.hud .spacer { flex: 1; }
+.small-btn { padding: 7px 12px; font-size: 14px; border-radius: 12px; }
+.small-btn:disabled { opacity: .4; }
+.hint { text-align: center; margin: 0; }
+.status { text-align: center; color: var(--muted); font-size: 13px; min-height: 18px; }
+
+.frame-wrap { display: flex; justify-content: center; padding: 18px 0; }
+.frame {
+  --cell: 48px; --w: 6; --h: 7;
+  position: relative;
+  width: calc(var(--w) * var(--cell)); height: calc(var(--h) * var(--cell));
+  background: #3b3350;
+  border-radius: 14px;
+  box-shadow: 0 0 0 12px #4a4166, 0 0 0 14px #2d2740, var(--shadow);
+}
+.board {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 10px;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+  touch-action: none;
+}
+.exits { position: absolute; inset: 0; pointer-events: none; }
+.exit { position: absolute; border-radius: 6px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.25); }
+.exit.N, .exit.S { height: 14px; }
+.exit.W, .exit.E { width: 14px; }
+.exit.N { border-radius: 6px 6px 2px 2px; } .exit.S { border-radius: 2px 2px 6px 6px; }
+.exit.W { border-radius: 6px 2px 2px 6px; } .exit.E { border-radius: 2px 6px 6px 2px; }
+
+.wall {
+  position: absolute; left: calc(var(--x) * var(--cell)); top: calc(var(--y) * var(--cell));
+  width: var(--cell); height: var(--cell); padding: 3px;
+}
+.wall::before { content: ""; display: block; width: 100%; height: 100%; border-radius: 8px; background: #6b6188; box-shadow: inset 0 -4px 0 #504869, inset 0 2px 0 rgba(255,255,255,.12); }
+
+.piece {
+  position: absolute; left: calc(var(--x) * var(--cell)); top: calc(var(--y) * var(--cell));
+  width: 0; height: 0; cursor: grab;
+  transition: left .07s linear, top .07s linear;
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,.35));
+}
+.piece.dragging { transition: none; cursor: grabbing; filter: drop-shadow(0 8px 8px rgba(0,0,0,.45)); z-index: 5; }
+.piece .cell {
+  position: absolute; left: calc(var(--x) * var(--cell)); top: calc(var(--y) * var(--cell));
+  width: var(--cell); height: var(--cell);
+  box-shadow: inset 0 calc(var(--cell) * -0.12) 0 var(--dark), inset 0 2px 0 rgba(255,255,255,.25);
+}
+.piece .cell i {
+  position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%);
+  width: 46%; height: 46%; border-radius: 50%;
+  background: inherit;
+  box-shadow: inset 0 -3px 0 var(--dark), inset 0 2px 0 rgba(255,255,255,.3), 0 2px 2px rgba(0,0,0,.25);
+}
+/* bordes redondeados por pieza: primera/última celda aproximado con radio en todas (queda bien con estudios) */
+.piece .cell { border-radius: 6px; }
+
+.piece.exit-N { animation: outN .22s ease-in forwards; } .piece.exit-S { animation: outS .22s ease-in forwards; }
+.piece.exit-W { animation: outW .22s ease-in forwards; } .piece.exit-E { animation: outE .22s ease-in forwards; }
+@keyframes outN { to { transform: translateY(calc(var(--cell) * -4)); opacity: 0; } }
+@keyframes outS { to { transform: translateY(calc(var(--cell) * 4)); opacity: 0; } }
+@keyframes outW { to { transform: translateX(calc(var(--cell) * -4)); opacity: 0; } }
+@keyframes outE { to { transform: translateX(calc(var(--cell) * 4)); opacity: 0; } }
+
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 150; }
+.confetti i { position: absolute; top: 30%; width: 10px; height: 14px; border-radius: 3px; animation: fall 1.5s ease-in forwards; }
+@keyframes fall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), 70vh) rotate(540deg); opacity: 0; } }

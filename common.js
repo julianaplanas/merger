@@ -162,7 +162,7 @@ window.HUB = (() => {
   if ('serviceWorker' in navigator && !DEV) {
     let had = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) location.reload(); had = true; });
-    const base = location.pathname.replace(/\/(merge|sort|diner)\/.*$/, '/').replace(/index\.html$/, '');
+    const base = location.pathname.replace(/\/(merge|sort|diner|blocks)\/.*$/, '/').replace(/index\.html$/, '');
     navigator.serviceWorker.register(base + 'sw.js').then(r => r.update()).catch(() => {});
   }
 

@@ -35,7 +35,7 @@
   <main class="hub">
     <div class="hero">
       <h1>Salón</h1>
-      <p>Tres juegos, cero anuncios.</p>
+      <p>Cuatro juegos, cero anuncios.</p>
     </div>
     <div class="games">
       <a class="game" href="merge/">
@@ -46,6 +46,17 @@
           <h2>Bistró</h2>
           <p>Fusioná ingredientes, cociná recetas y atendé a tus clientes.</p>
           <div class="meta" id="meta-merge"></div>
+        </div>
+        <div class="go">›</div>
+      </a>
+      <a class="game" href="blocks/">
+        <div class="art" style="background:#3b3350">
+          <svg viewBox="0 0 96 96"><g><rect x="12" y="14" width="40" height="20" rx="5" fill="#5a9bd6"/><circle cx="22" cy="22" r="5" fill="#7fb4e4"/><circle cx="42" cy="22" r="5" fill="#7fb4e4"/><rect x="56" y="14" width="20" height="40" rx="5" fill="#e4b45a"/><circle cx="66" cy="24" r="5" fill="#f0cc80"/><circle cx="66" cy="44" r="5" fill="#f0cc80"/><rect x="12" y="38" width="20" height="40" rx="5" fill="#d9553f"/><circle cx="22" cy="48" r="5" fill="#e97d6a"/><circle cx="22" cy="68" r="5" fill="#e97d6a"/><rect x="36" y="58" width="40" height="20" rx="5" fill="#7f9c6a"/><circle cx="46" cy="68" r="5" fill="#a3bb90"/><circle cx="66" cy="68" r="5" fill="#a3bb90"/><rect x="80" y="38" width="8" height="20" rx="3" fill="#d9553f"/></g></svg>
+        </div>
+        <div>
+          <h2>Bloques</h2>
+          <p>Deslizá las piezas de ladrillos hasta la salida de su color y vaciá el tablero.</p>
+          <div class="meta" id="meta-blocks"></div>
         </div>
         <div class="go">›</div>
       </a>
@@ -80,6 +91,8 @@
     try {
       const b = JSON.parse(localStorage.getItem('bistro.v2') || 'null');
       if (b) document.getElementById('meta-merge').textContent = `★ ${b.stars || 0} · ${(b.discovered || []).length} recetas`;
+      const bl = JSON.parse(localStorage.getItem('blocks.v1') || 'null');
+      if (bl) document.getElementById('meta-blocks').textContent = `Nivel ${bl.level || 1}`;
       const s = JSON.parse(localStorage.getItem('sort.v1') || 'null');
       if (s) document.getElementById('meta-sort').textContent = `Nivel ${s.level || 1}`;
       const d = JSON.parse(localStorage.getItem('diner.v1') || 'null');

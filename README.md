@@ -1,8 +1,9 @@
 # Salón
 
-Tres juegos casuales en una PWA, sin publicidad, sin compras ni notificaciones.
+Cuatro juegos casuales en una PWA, sin publicidad, sin compras ni notificaciones.
 
 - **Bistró** (`/merge`): merge game de cocina. Ingredientes, estaciones, 72 recetas, mesas de clientes y un local que se decora.
+- **Bloques** (`/blocks`): deslizar piezas de ladrillos hasta la salida de su color (estilo Block Jam). Niveles construidos al revés, siempre resolubles.
 - **Colores** (`/sort`): ordenar bloques por color vertiendo entre tubos. Niveles infinitos, generados y verificados como resolubles.
 - **Servicio** (`/diner`): atender mesas. Sentar, tomar pedido, cocinar, servir, cobrar. Días de 90 s, estrellas y mejoras.
 
@@ -25,6 +26,7 @@ GitHub Pages desde `main`, carpeta raíz. Sin build.
 - `index.html` — el hub
 - `common.css`, `common.js` — estilos base, barra superior, minutos, ajustes y límites
 - `merge/` — Bistró (`app.js` lógica, `data.js` contenido, `icons.js`, `local.js`)
+- `blocks/` — Bloques (`blocks.js` incluye generador con solución registrada)
 - `sort/` — Colores (`sort.js` incluye generador y solver)
 - `diner/` — Servicio (`diner.js`)
 - `sw.js`, `manifest.json`, `icon.svg` — PWA
